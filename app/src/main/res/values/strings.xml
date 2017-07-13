@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Reader for CommitStrip</string>
+    <string name="feed_title">Commit Strip</string>
+    <string name="change_display_style">change display style</string>
+    <string name="settings">Settings</string>
+    <string name="no_internet_warning">no internet connection</string>
+</resources>
