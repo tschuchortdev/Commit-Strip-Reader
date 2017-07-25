@@ -1,10 +1,14 @@
 package com.tschuchort.readerforcommitstrip.feed
 
-import com.tschuchort.readerforcommitstrip.AppModule
+import com.tschuchort.readerforcommitstrip.*
 import dagger.Component
-import javax.inject.Singleton
 
-@Singleton
-@Component(modules = arrayOf(AppModule::class))
-interface FeedComponent {
+@PerActivity
+@Component(
+		modules = arrayOf(FeedModule::class),
+		dependencies = arrayOf(AppComponent::class))
+interface FeedComponent : AppComponent {
+	fun exposePresenter(): FeedContract.Presenter
+
+	fun inject(activity: FeedActivity)
 }

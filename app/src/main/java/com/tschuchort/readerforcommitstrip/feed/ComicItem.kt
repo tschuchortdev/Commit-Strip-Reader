@@ -2,17 +2,23 @@ package com.tschuchort.readerforcommitstrip.feed
 
 import android.widget.ImageView
 import android.widget.TextView
-import butterknife.BindView
 import com.airbnb.epoxy.EpoxyAttribute
-import com.airbnb.epoxy.EpoxyModelClass
 import com.airbnb.epoxy.EpoxyModelWithHolder
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.tschuchort.readerforcommitstrip.BaseEpoxyHolder
 import com.tschuchort.readerforcommitstrip.Comic
 import com.tschuchort.readerforcommitstrip.R
 
-class ComicFeedItem(
-		@EpoxyAttribute val comic: Comic) : EpoxyModelWithHolder<ComicFeedItem.Holder>() {
+open class ComicItem(
+		@EpoxyAttribute @JvmField val comic: Comic,
+		val onClick: (Comic) -> Unit = {},
+		val onLongClick: (Comic) -> Unit = {})
+	: EpoxyModelWithHolder<ComicItem.Holder>() {
+
+	init {
+		id(comic.title)
+	}
 
 	override fun getDefaultLayout() = R.layout.feed_card
 
@@ -20,6 +26,8 @@ class ComicFeedItem(
 		super.bind(holder)
 
 		holder.titleView.text = comic.title
+		holder.comicView.setOnClickListener { onClick(comic) }
+		holder.comicView.setOnLongClickListener { onLongClick(comic); true }
 
 		Glide.with(holder.context)
 				.load(comic.imageUrl)
@@ -32,13 +40,10 @@ class ComicFeedItem(
 		Glide.clear(holder.comicView)
 	}
 
-	override fun id(): Long {
-		//TODO
-	}
 	override fun createNewHolder() = Holder()
 
 	class Holder : BaseEpoxyHolder() {
-		@BindView(R.id.title) lateinit var titleView: TextView
-		@BindView(R.id.comic) lateinit var comicView: ImageView
+		val titleView: TextView by bindView(R.id.title)
+		val comicView: ImageView by bindView(R.id.comic)
 	}
 }

@@ -15,6 +15,9 @@ import java.util.List;
  */
 
 @SuppressWarnings("WeakerAccess")
+@NamespaceList({
+    @Namespace(reference = "http://www.w3.org/2005/Atom", prefix = "atom")
+})
 @Root
 public class Rss {
     @Attribute
@@ -53,6 +56,10 @@ public class Rss {
         @Element(name = "pubDate", required = false)
         String pubDate;
 
+        @Namespace(prefix = "content", reference = "http://purl.org/rss/1.0/modules/content/")
+        @Element(name = "encoded", data = true, required = false)
+        String content;
+
         @Override
         public String toString() {
             return "Channel{" +
@@ -87,14 +94,14 @@ public class Rss {
             @Element(name = "link")
             String link;
 
-            @Element(name = "description")
+            @Element(name = "description", data = true, required = false)
             String description;
 
             @Element(name = "author", required = false)
             String author;
 
-            @Element(name = "category", required = false)
-            String category;
+            @ElementList(entry = "category", inline = true, data = true, required = false)
+            List<String> categories;
 
             @Element(name = "comments", required = false)
             String comments;
@@ -111,6 +118,10 @@ public class Rss {
             @Element(name = "source", required = false)
             String source;
 
+            @Namespace(prefix = "content", reference = "http://purl.org/rss/1.0/modules/content/")
+            @Element(name = "encoded", data = true)
+            String content;
+
             @Override
             public String toString() {
                 return "Item{" +
@@ -118,12 +129,13 @@ public class Rss {
                         ", link='" + link + '\'' +
                         ", description='" + description + '\'' +
                         ", author='" + author + '\'' +
-                        ", category='" + category + '\'' +
+                        ", categories='" + categories + '\'' +
                         ", comments='" + comments + '\'' +
                         ", enclosure='" + enclosure + '\'' +
                         ", guid='" + guid + '\'' +
                         ", pubDate='" + pubDate + '\'' +
                         ", source='" + source + '\'' +
+                        ", content:encoded='" + content + '\'' +
                         '}';
             }
         }

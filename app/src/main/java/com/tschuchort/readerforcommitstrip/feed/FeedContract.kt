@@ -3,36 +3,61 @@ package com.tschuchort.readerforcommitstrip.feed
 
 import com.tschuchort.readerforcommitstrip.Comic
 import com.tschuchort.readerforcommitstrip.Contract
-
+import com.tschuchort.readerforcommitstrip.Logger
+import io.reactivex.Scheduler
 
 interface FeedContract : Contract {
 	enum class Orientation { VERTICAL, HORIZONTAL }
 
-	sealed class State(
-			val comics: List<Comic> = emptyList(),
-			val feedOrientation: Orientation = Orientation.VERTICAL,
-			val isLoading: Boolean = false,
-			val noInternet: Boolean = false
-	) : Contract.State {
+	sealed class State: Contract.State {
+		open val comics: List<Comic> = emptyList()
+		open val feedOrientation: Orientation = Orientation.VERTICAL
 
-		data class ShareDialog(val comic: Comic): State()
+		data class Default(
+				override val comics: List<Comic>,
+				override val feedOrientation: Orientation) : State()
+
+		data class ShareDialog(
+				val selectedComic: Comic,
+				override val comics: List<Comic>,
+				override val feedOrientation: Orientation) : State()
+
+		data class NoInternet(
+				override val comics: List<Comic>,
+				override val feedOrientation: Orientation) : State()
+
+		data class LoadingMore(
+				override val comics: List<Comic>,
+				override val feedOrientation: Orientation) : State()
+
+		data class Refreshing(
+				override val comics: List<Comic>,
+				override val feedOrientation: Orientation) : State()
 	}
 
 	sealed class Event : Contract.Event {
-		class EndReached : Event()
-		class SettingsClicked : Event()
-		class PulledToRefresh : Event()
-		class OrientationChanged : Event()
-		data class ComicClicked(val comic: Comic): Event()
-		data class ComicLongClicked(val comic: Comic): Event()
-		data class ComicDoubleClicked(val comic: Comic): Event()
+		object EndReached : Event()
+		object SettingsClicked : Event()
+		object Refresh : Event()
+		object OrientationChanged : Event()
+		data class ComicsLoaded(val newComics: List<Comic>) : Event()
+		object LoadingFailed : Event()
+		data class DataRefreshed(val latestComics: List<Comic>) : Event()
+		object RefreshFailed : Event()
+		data class ComicClicked(val selectedComic: Comic): Event()
+		data class ComicLongClicked(val selectedComic: Comic): Event()
 	}
 
-	abstract class Presenter : Contract.Presenter<State>()
-
-	interface View : Contract.View<State> {
-		fun showSettings()
-		fun showDetails(comic: Comic)
-		fun showEnlarged(comic: Comic)
+	sealed class Command : Contract.Command {
+		data class LoadMore(val lastComic: Comic?, val lastIndex: Int) : Command()
+		data class RefreshNewest(val newestComic: Comic?) : Command()
+		data class ShowEnlarged(val selectedComic: Comic) : Command()
+		object StartSettings : Command()
+		object ShowRefreshFailed : Command()
 	}
+
+	abstract class Presenter(uiScheduler: Scheduler, compScheduler: Scheduler, logger: Logger)
+		: Contract.Presenter<State, Event, View, Command>(uiScheduler, compScheduler, logger)
+
+	interface View : Contract.View<State, Event, Command>
 }

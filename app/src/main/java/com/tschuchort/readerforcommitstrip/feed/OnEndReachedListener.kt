@@ -4,30 +4,37 @@ import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.StaggeredGridLayoutManager
+import com.tschuchort.readerforcommitstrip.findFirstVisibleItemPosition
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
+import io.reactivex.Observable
 
 fun RecyclerView.addOnEndReachedListener(visibleItemThreshhold: Int = 0, onEndReached: (RecyclerView) -> Unit): RecyclerView.OnScrollListener {
 	val scrollListener = object : RecyclerView.OnScrollListener() {
+		private var previousScrollWasEnd = false
+
 		override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
 			val layoutManager = rv.layoutManager
 			val visibleItemCount = layoutManager.childCount
 			val totalItemCount = layoutManager.itemCount
 
-			val firstVisibleItemPositions: List<Int> = when (layoutManager) {
-				is LinearLayoutManager        -> listOf(layoutManager.findFirstVisibleItemPosition())
-				is ViewPagerLayoutManager     -> listOf(layoutManager.findFirstVisibleItemPosition())
-				is GridLayoutManager          -> listOf(layoutManager.findFirstVisibleItemPosition())
-				is StaggeredGridLayoutManager -> layoutManager.findFirstVisibleItemPositions(null).toList()
-				else                          -> throw IllegalStateException(
-						"can't get firstVisibleItemPosition for unknown layoutManager in RecyclerView scroll onEndReached")
-			}
+			val firstVisibleItemPosition =
+					try { layoutManager.findFirstVisibleItemPosition() }
+					catch(e: IllegalArgumentException){
+						throw IllegalArgumentException(
+								"can not set addOnEndReachedListener for this recyclerview because " +
+								"the layout manager doesn't support findFirstVisibleItemPosition")
+					}
 
-			if (firstVisibleItemPositions.isNotEmpty()
-				&& (totalItemCount - visibleItemCount) <= (firstVisibleItemPositions[0] + visibleItemThreshhold)) {
+			if (adapter.itemCount > 0 && scrollState != RecyclerView.SCROLL_STATE_IDLE && !previousScrollWasEnd
+				&& (totalItemCount - visibleItemCount) <= (firstVisibleItemPosition + visibleItemThreshhold)) {
 
 				onEndReached(rv)
+				previousScrollWasEnd = true
+			}
+			else {
+				previousScrollWasEnd = false
 			}
 		}
 	}
@@ -36,14 +43,13 @@ fun RecyclerView.addOnEndReachedListener(visibleItemThreshhold: Int = 0, onEndRe
 	return scrollListener
 }
 
-fun RecyclerView.onEndReachedEvents() = Flowable.create<Unit>({ emitter ->
-	val listener = addOnEndReachedListener(3, {
+fun RecyclerView.onEndReachedEvents(visibleItemThreshhold: Int = 2) = Observable.create<Unit> { emitter ->
+	val listener = addOnEndReachedListener(visibleItemThreshhold) {
 		emitter.onNext(Unit)
-	})
+	}
 
 	emitter.setCancellable {
 		emitter.onComplete()
 		removeOnScrollListener(listener)
 	}
-
-}, BackpressureStrategy.LATEST)!!
+}!!

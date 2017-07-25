@@ -5,6 +5,12 @@ import com.squareup.leakcanary.LeakCanary
 
 class App : Application() {
 
+	val component by lazy {
+		DaggerAppComponent.builder()
+			.appModule(AppModule(this))
+			.build()!!
+	}
+
 	override fun onCreate() {
 		super.onCreate()
 
@@ -13,6 +19,8 @@ class App : Application() {
 			// You should not init your app in this process.
 			return
 		}
+
+		component.inject(this)
 
 		LeakCanary.install(this)
 	}
