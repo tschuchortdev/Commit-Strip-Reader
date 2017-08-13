@@ -26,9 +26,13 @@ class ComicRepositoryImpl
 				// drop elements that are before the last comic in the list we already have
 				// so we don't have duplicates in the end. This should be much more
 				// performant than distinct()
-				.map { comics -> comics.dropUntilAfter { it != lastComic } }
+				.map { comics -> comics.dropUntilAfter { it == lastComic } }
 				// append another page to return a list large enough
-				.zipWith(getComicsForPage(currentPage + 1)) { firstPage, secondPage -> firstPage + secondPage }
+				.zipWith(getComicsForPage(currentPage + 1)
+						.onErrorReturn(emptyList()))
+				{ firstPage, secondPage ->
+					firstPage + secondPage
+				}
 	}
 
 	override fun getComicsBefore(firstComic: Comic): Single<List<Comic>> =
@@ -48,7 +52,7 @@ class ComicRepositoryImpl
 
 private const val page_size = 10
 
-private fun getPageForIndex(index: Int) = index + 1 // pages are 1-indexed
+private fun getPageForIndex(index: Int) = (index / page_size) + 1 // pages are 1-indexed
 
 private fun createComicsFromRss(rss: Rss): List<Comic>
 		= rss.channel.itemList.map {
