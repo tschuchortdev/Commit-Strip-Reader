@@ -1,6 +1,7 @@
 package com.tschuchort.readerforcommitstrip
 
 import android.webkit.URLUtil
+import android.webkit.URLUtil.isValidUrl
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.rxkotlin.zipWith
@@ -54,20 +55,13 @@ private const val page_size = 10
 
 private fun getPageForIndex(index: Int) = (index / page_size) + 1 // pages are 1-indexed
 
-private fun createComicsFromRss(rss: Rss): List<Comic>
-		= rss.channel.itemList.map {
+private fun createComicsFromRss(rss: Rss): List<Comic> =
+		rss.channel.itemList.map {
+			val imageUrl = Regex("https?://www\\.commitstrip\\.com/wp-content/uploads/\\d+/\\d+/.*?\\.(jpe?g|png|gif)")
+								   .findAll(it.content!!).map { it.value }
+								   .firstOrNull { isValidUrl(it) } // if there actually happen to be multiple images, take the first one
+						   ?: throw RuntimeException("could not parse content url from RSS: " + it.content!!)
 
-	val imageUrl = Regex("https?://www\\.commitstrip\\.com/wp-content/uploads.*")
-						   .find(it.content!!)?.value
-						   ?.substringBefore("\"")
-			?: throw RuntimeException("could not parse content url from RSS")
+			Comic(it.title!!, it.pubDate!!, it.description, it.link, imageUrl, it.categories ?: emptyList())
+		}
 
-	if(isImageUrl(imageUrl)) {
-		Comic(it.title!!, it.pubDate!!, it.description, it.link, imageUrl, it.categories ?: emptyList())
-	}
-	else {
-		throw RuntimeException("could not parse valid image URL from RSS")
-	}
-}
-
-private fun isImageUrl(url: String) = URLUtil.isValidUrl(url) && url matches Regex(".*\\.(jpe?g|png|gif)")
