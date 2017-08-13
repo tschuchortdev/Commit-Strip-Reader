@@ -6,4 +6,6 @@
     <string name="no_internet_warning">no internet connection</string>
     <string name="failed_to_load_comics">failed to load comics</string>
     <string name="toast_failed_to_refresh_feed">failed to refresh feed</string>
+    <string name="card_title_description">Title</string>
+    <string name="card_image_description">Comic</string>
 </resources>

@@ -31,6 +31,7 @@ open class ComicItem(
 
 		Glide.with(holder.context)
 				.load(comic.imageUrl)
+				.diskCacheStrategy(DiskCacheStrategy.RESULT)
 				.crossFade()
 				.into(holder.comicView)
 	}
