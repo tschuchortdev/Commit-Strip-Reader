@@ -2,14 +2,12 @@ package com.tschuchort.readerforcommitstrip
 
 import android.os.Bundle
 import android.support.annotation.CallSuper
-import android.util.Log
 import com.jakewharton.rxrelay2.BehaviorRelay
 import com.jakewharton.rxrelay2.PublishRelay
 import io.mironov.smuggler.AutoParcelable
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.disposables.Disposable
-import org.funktionale.option.toOption
 import java.io.Serializable
 
 interface Contract {
@@ -33,12 +31,14 @@ interface Contract {
 		/**
 		 * emits state changes, subcribed by view
 		 */
-		val stateUpdates by lazy { BehaviorRelay.createDefault(initialState)!! }
+		val stateUpdates: Observable<S> by lazy { stateRelay }
+		private val stateRelay by lazy { BehaviorRelay.createDefault(initialState)!! }
 
 		/**
-		 * emits sideEffects that cause side effects, may be subscribed by view and others
+		 * emits commands that cause side effects, may be subscribed by view and others
 		 */
-		val sideEffects by lazy { PublishRelay.create<C>()!! }
+		val sideEffects: Observable<C> by lazy { commandRelay }
+		private val commandRelay by lazy { PublishRelay.create<C>()!! }
 
 		/**
 		 * initial state of the view
@@ -59,8 +59,8 @@ interface Contract {
 		 * called by view to save the last view state
 		 */
 		fun onSaveInstanceState(outBundle: Bundle?) {
-			outBundle!!.putParcelable(BUNDLE_KEY, stateUpdates.value
-												  ?: throw IllegalStateException("stateUpdates relay is empty"))
+			outBundle!!.putParcelable(BUNDLE_KEY, stateRelay.value
+												  ?: throw IllegalStateException("stateRelay relay is empty"))
 		}
 
 		fun onRestoreInstanceState(savedInstanceBundle: Bundle?) {
@@ -86,22 +86,22 @@ interface Contract {
 				Observable.merge(viewEvents, this.events)
 						.doOnNext(this::logEvent)
 						.subscribeOn(compScheduler)
-						.map { event -> reduce(stateUpdates.value!!, event) }
+						.map { event -> reduce(stateRelay.value!!, event) }
 						.subscribe { (state, cmd) ->
-							stateUpdates.accept(state)
+							stateRelay.accept(state)
 
 							if(cmd != null)
-								sideEffects.accept(cmd)
+								commandRelay.accept(cmd)
 						}
 
 				// log state updates
-				stateUpdates
+				stateRelay
 						.subscribeOn(compScheduler)
 						.distinctUntilChanged()
 						.subscribe(this::logState)
 
 				// log side effects
-				sideEffects
+				commandRelay
 						.subscribeOn(compScheduler)
 						.subscribe(this::logSideEffect)
 
@@ -110,8 +110,8 @@ interface Contract {
 
 			// now the view can subscribe to the relays in separate streams, so we can terminate them
 			// without terminating other streams that only live in the presenter/data layer
-			viewDisposables += stateUpdates.observeOn(uiScheduler).subscribe(view::render)
-			viewDisposables += sideEffects.observeOn(uiScheduler).subscribe(view::doSideEffect)
+			viewDisposables += stateRelay.observeOn(uiScheduler).subscribe(view::render)
+			viewDisposables += commandRelay.observeOn(uiScheduler).subscribe(view::doSideEffect)
 		}
 
 		/**
