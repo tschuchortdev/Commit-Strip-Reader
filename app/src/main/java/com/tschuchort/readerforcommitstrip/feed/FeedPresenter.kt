@@ -31,7 +31,7 @@ class FeedPresenter
 								.subscribeOn(ioScheduler)
 								.map<Event> { Event.ComicsLoaded(it) }
 								.doOnError { Log.e("Error", it.message) }
-								//.onErrorReturn(Event.LoadingFailed)
+								.onErrorReturn(Event.LoadingFailed)
 					},
 			sideEffects.ofType<Command.RefreshNewest>()
 					.switchMapSingle { (newestComic) ->

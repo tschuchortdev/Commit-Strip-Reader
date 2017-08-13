@@ -26,19 +26,22 @@ interface Contract {
 
 		private val viewDisposables = ArrayList<Disposable>()
 		private val viewEvents = PublishRelay.create<E>()
+		private val stateRelay by lazy { BehaviorRelay.createDefault(initialState)!! }
+		private val commandRelay by lazy { PublishRelay.create<C>()!! }
+
 		private var attachedForFirstTime = true
+		private var viewIsAttached = false
 
 		/**
 		 * emits state changes, subcribed by view
 		 */
 		val stateUpdates: Observable<S> by lazy { stateRelay }
-		private val stateRelay by lazy { BehaviorRelay.createDefault(initialState)!! }
+
 
 		/**
 		 * emits commands that cause side effects, may be subscribed by view and others
 		 */
 		val sideEffects: Observable<C> by lazy { commandRelay }
-		private val commandRelay by lazy { PublishRelay.create<C>()!! }
 
 		/**
 		 * initial state of the view
@@ -72,6 +75,9 @@ interface Contract {
 		 */
 		@CallSuper
 		open fun attechView(view: V) {
+			if(viewIsAttached)
+				throw IllegalStateException("view is already attached")
+
 			// subscribe to the view's events via a relay so we can unsubscribe
 			// from those events separately
 			viewDisposables += view.events().subscribe(viewEvents::accept)
@@ -112,6 +118,8 @@ interface Contract {
 			// without terminating other streams that only live in the presenter/data layer
 			viewDisposables += stateRelay.observeOn(uiScheduler).subscribe(view::render)
 			viewDisposables += commandRelay.observeOn(uiScheduler).subscribe(view::doSideEffect)
+
+			viewIsAttached = true
 		}
 
 		/**
@@ -119,9 +127,14 @@ interface Contract {
 		 */
 		@CallSuper
 		open fun detachView() {
+			if(!viewIsAttached)
+				throw IllegalStateException("view is already detached or was never attached")
+
 			viewDisposables
 					.onEach(Disposable::dispose)
 					.clear()
+
+			viewIsAttached = false
 		}
 
 		fun logEvent(event: E) {
