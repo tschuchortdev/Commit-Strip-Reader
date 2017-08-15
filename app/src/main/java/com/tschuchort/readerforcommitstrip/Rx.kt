@@ -1,8 +1,11 @@
 package com.tschuchort.readerforcommitstrip
 
 import io.reactivex.*
+import io.reactivex.rxkotlin.zipWith
 import io.reactivex.schedulers.Schedulers
 import org.reactivestreams.Publisher
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.MILLISECONDS
 
 /**
  * dropMap is basically the opposite of switchMap
@@ -73,11 +76,17 @@ fun <T,S> Observable<Pair<T,S>>.unzip() = Pair(
 			})
 		})
 
+fun <T,S> Flowable<Pair<T,S>>.unzip(firstObserver: Observer<T>, secondObserver: Observer<S>)
+		= toObservable().unzip(firstObserver, secondObserver)
+
 fun <T,S> Observable<Pair<T,S>>.unzip(firstObserver: Observer<T>, secondObserver: Observer<S>)
 		= unzip().let { (fst, snd) ->
 			fst.subscribeWith(firstObserver)
 			snd.subscribeWith(secondObserver)
-		}
+		}!!
+
+fun <T,S,R> Flowable<Triple<T,S,R>>.unzip()
+		= toObservable().unzip()
 
 fun <T,S,R> Observable<Triple<T,S,R>>.unzip() = Triple(
 		Observable.create<T> { emitter ->
@@ -108,22 +117,71 @@ fun <T,S,R> Observable<Triple<T,S,R>>.unzip() = Triple(
 			})
 		})
 
+
+
+fun <T,S,R> Flowable<Triple<T,S,R>>.unzip(firstObserver: Observer<T>, secondObserver: Observer<S>, thirdObserver: Observer<R>)
+		= toObservable().unzip(firstObserver, secondObserver, thirdObserver)
+
 fun <T,S,R> Observable<Triple<T,S,R>>.unzip(firstObserver: Observer<T>, secondObserver: Observer<S>, thirdObserver: Observer<R>)
 		= unzip().let { (fst, snd, thd) ->
 			fst.subscribeWith(firstObserver)
 			snd.subscribeWith(secondObserver)
 			thd.subscribeWith(thirdObserver)
-		}
+		}!!
 
-fun <T> Observable<T>.lastOrThrow() = this
-		.lastOrError()
-		.doOnError { throw IllegalStateException("observable emitted no items") }
+fun <T> Observable<T>.lastOrThrow(throwable: Throwable = IllegalStateException("observable emitted no items"))
+		= lastOrError()
+		.doOnError { throw throwable }
 		.blockingGet()!!
 
-fun <T> Flowable<T>.lastOrThrow() = this
-		.lastOrError()
-		.doOnError { throw IllegalStateException("flowable emitted no items") }
+fun <T> Flowable<T>.lastOrThrow(throwable: Throwable = IllegalStateException("observable emitted no items"))
+		= lastOrError()
+		.doOnError { throw throwable }
 		.blockingGet()
+
+fun <T> Single<T>.retryDelayed(delay: Long, timeUnit: TimeUnit = MILLISECONDS, times: Int = 0)
+		= toFlowable().retryDelayed(delay, timeUnit, times).lastOrError()!!
+
+fun <T> Observable<T>.retryDelayed(delay: Long, timeUnit: TimeUnit = MILLISECONDS, times: Int = 0)
+		= toFlowable(BackpressureStrategy.ERROR).retryDelayed(delay, timeUnit, times).toObservable()!!
+
+fun <T> Flowable<T>.retryDelayed(delay: Long, timeUnit: TimeUnit = MILLISECONDS, times: Int = -1)
+		= retryWhen { errors ->
+			errors.flatMapIndexed { error, count ->
+				if (count < times || times < 0)
+					Flowable.timer(delay, timeUnit)
+				else
+					Flowable.error(error)
+			}
+		}!!
+
+
+fun <T> Flowable<T>.indexed(start: Int = 0) = zipWith(Flowable.range(0, Int.MAX_VALUE))
+fun <T> Observable<T>.indexed(start: Int = 0) = zipWith(Observable.range(0, Int.MAX_VALUE))
+
+inline fun <T,S> Flowable<T>.flatMapIndexed(crossinline mapper: (T, Int) -> Flowable<S>)
+		= indexed().flatMap { (t, count) -> mapper(t, count) }!!
+
+inline fun <T,S> Flowable<T>.flatMapSingleIndexed(crossinline mapper: (T, Int) -> Single<S>)
+		= indexed().flatMapSingle { (t, count) -> mapper(t, count) }!!
+
+inline fun <T,S> Flowable<T>.flatMapMaybeIndexed(crossinline mapper: (T, Int) -> Maybe<S>)
+		= indexed().flatMapMaybe { (t, count) -> mapper(t, count) }!!
+
+inline fun <T> Flowable<T>.flatCompletableIndexed(crossinline mapper: (T, Int) -> Completable)
+		= indexed().flatMapCompletable { (t, count) -> mapper(t, count) }!!
+
+inline fun <T,S> Observable<T>.flatMapIndexed(crossinline mapper: (T, Int) -> Observable<S>)
+		= indexed().flatMap { (t, count) -> mapper(t, count) }!!
+
+inline fun <T,S> Observable<T>.flatMapSingleIndexed(crossinline mapper: (T, Int) -> Single<S>)
+		= indexed().flatMapSingle { (t, count) -> mapper(t, count) }!!
+
+inline fun <T,S> Observable<T>.flatMapMaybeIndexed(crossinline mapper: (T, Int) -> Maybe<S>)
+		= indexed().flatMapMaybe { (t, count) -> mapper(t, count) }!!
+
+inline fun <T> Observable<T>.flatCompletableIndexed(crossinline mapper: (T, Int) -> Completable)
+		= indexed().flatMapCompletable { (t, count) -> mapper(t, count) }!!
 
 fun <T> Observable<T>.onErrorReturn(value: T) = onErrorReturnItem(value)!!
 fun <T> Maybe<T>.onErrorReturn(value: T) = onErrorReturnItem(value)!!
