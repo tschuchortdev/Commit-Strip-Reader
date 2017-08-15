@@ -29,7 +29,9 @@ class FeedPresenter
 							comicRepository.getNewestComics()
 						)
 								.subscribeOn(ioScheduler)
-								.map<Event> { Event.ComicsLoaded(it) }
+								.doOnSubscribe { logger.d("", "loading more comics") }
+								.retryDelayed(delay = 1000, times = 5)
+								.map<Event>(Event::ComicsLoaded)
 								.doOnError { Log.e("Error", it.message) }
 								.onErrorReturn(Event.LoadingFailed)
 					},
@@ -41,7 +43,9 @@ class FeedPresenter
 							comicRepository.getNewestComics()
 						)
 								.subscribeOn(ioScheduler)
-								.map<Event> { Event.DataRefreshed(it) }
+								.doOnSubscribe { logger.d("", "refreshing comics") }
+								.retryDelayed(delay = 1000, times = 5)
+								.map<Event>(Event::DataRefreshed)
 								.doOnError { Log.e("Error", it.message) }
 								.onErrorReturn(Event.RefreshFailed)
 					})!!
@@ -65,9 +69,8 @@ class FeedPresenter
 				State.Default((event.latestComics + oldState.comics), oldState.feedOrientation),
 				null)
 
-		is Event.RefreshFailed      -> Pair(
-				State.Default(oldState.comics, oldState.feedOrientation),
-				Command.ShowRefreshFailed)
+		is Event.RefreshFailed      ->
+			Pair(State.Default(oldState.comics, oldState.feedOrientation), Command.ShowLoadingFailed)
 
 		is Event.EndReached         ->
 			if(oldState is State.LoadingMore)
@@ -78,15 +81,20 @@ class FeedPresenter
 					Command.LoadMore(oldState.comics.lastOrNull(), oldState.comics.lastIndex))
 
 		is Event.LoadingFailed      ->
-			// TODO retry?
-			Pair(State.Default(oldState.comics, oldState.feedOrientation), null)
+			Pair(State.Default(oldState.comics, oldState.feedOrientation), Command.ShowLoadingFailed)
 
-		is Event.ComicsLoaded       -> Pair(State.Default((oldState.comics + event.newComics), oldState.feedOrientation), null)
+		is Event.ComicsLoaded       ->
+			if(event.newComics.isNotEmpty())
+				Pair(State.Default((oldState.comics + event.newComics), oldState.feedOrientation), null)
+			else
+				Pair(oldState, Command.ShowNoMoreComics)
 
 		is Event.SettingsClicked    -> Pair(oldState, Command.StartSettings)
 
 		is Event.ComicClicked       -> Pair(oldState, Command.ShowEnlarged(event.selectedComic))
 
-		is Event.ComicLongClicked   -> Pair(State.ShareDialog(event.selectedComic, oldState.comics, oldState.feedOrientation), null)
+		is Event.ComicLongClicked   ->
+			Pair(State.ShareDialog(event.selectedComic, oldState.comics, oldState.feedOrientation), null)
 	}
 }
+

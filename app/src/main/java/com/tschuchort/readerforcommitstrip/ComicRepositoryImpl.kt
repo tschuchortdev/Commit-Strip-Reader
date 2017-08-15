@@ -1,10 +1,11 @@
 package com.tschuchort.readerforcommitstrip
 
-import android.webkit.URLUtil
 import android.webkit.URLUtil.isValidUrl
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.rxkotlin.zipWith
+import retrofit2.HttpException
+import retrofit2.Retrofit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,11 +29,18 @@ class ComicRepositoryImpl
 				// so we don't have duplicates in the end. This should be much more
 				// performant than distinct()
 				.map { comics -> comics.dropUntilAfter { it == lastComic } }
+				//.onErrorReturn(emptyList())
 				// append another page to return a list large enough
 				.zipWith(getComicsForPage(currentPage + 1)
 						.onErrorReturn(emptyList()))
 				{ firstPage, secondPage ->
 					firstPage + secondPage
+				}
+				.onErrorReturn { error ->
+					if(error is HttpException && error.code() == 404)
+						emptyList() // 404 means we are at the end of the list
+					else
+						throw error
 				}
 	}
 
@@ -44,7 +52,6 @@ class ComicRepositoryImpl
 					.takeUntil { comics -> comics.contains(firstComic) }
 					.lastOrError()
 					.map { comics -> comics.takeWhile { it != firstComic }}
-
 
 	private fun getComicsForPage(page: Int)
 			= webService.getRssFeed(page)
