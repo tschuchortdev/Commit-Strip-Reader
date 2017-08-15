@@ -18,6 +18,10 @@ kapt {
     correctErrorTypes = true
 }
 
+androidExtensions {
+    experimental = true // needed for parcelable generation
+}
+
 android {
     compileSdkVersion COMPILE_SDK_VERSION
     buildToolsVersion BUILD_TOOLS_VERSION
