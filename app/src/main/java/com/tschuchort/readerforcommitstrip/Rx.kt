@@ -156,8 +156,8 @@ fun <T> Flowable<T>.retryDelayed(delay: Long, timeUnit: TimeUnit = MILLISECONDS,
 		}!!
 
 
-fun <T> Flowable<T>.indexed(start: Int = 0) = zipWith(Flowable.range(0, Int.MAX_VALUE))
-fun <T> Observable<T>.indexed(start: Int = 0) = zipWith(Observable.range(0, Int.MAX_VALUE))
+fun <T> Flowable<T>.indexed(start: Int = 0) = zipWith(Flowable.range(start, Int.MAX_VALUE))
+fun <T> Observable<T>.indexed(start: Int = 0) = zipWith(Observable.range(start, Int.MAX_VALUE))
 
 inline fun <T,S> Flowable<T>.flatMapIndexed(crossinline mapper: (T, Int) -> Flowable<S>)
 		= indexed().flatMap { (t, count) -> mapper(t, count) }!!
