@@ -7,7 +7,6 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.StaggeredGridLayoutManager
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import android.util.DisplayMetrics
-import java.security.AccessController.getContext
 
 
 fun <T> Iterable<T>.dropUntilAfter(predicate: (T) -> Boolean) = dropWhile { !predicate(it) }.drop(1)

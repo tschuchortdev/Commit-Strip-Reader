@@ -2,14 +2,16 @@ package com.tschuchort.readerforcommitstrip.feed
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.annotation.StringRes
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.Toolbar
 import android.view.Menu
-import android.view.MenuItem
-import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.widget.TextView
 import android.widget.Toast
 import butterknife.bindView
@@ -18,23 +20,22 @@ import com.jakewharton.rxbinding2.support.v4.widget.RxSwipeRefreshLayout
 import com.jakewharton.rxbinding2.view.RxMenuItem
 import com.jakewharton.rxrelay2.PublishRelay
 import com.tschuchort.readerforcommitstrip.*
-import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import javax.inject.Inject
 import com.tschuchort.readerforcommitstrip.feed.FeedContract.*
+import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import io.reactivex.Observable
 
 open class FeedActivity : AppCompatActivity(), FeedContract.View {
-	private lateinit var feedOrientationMenuItem: MenuItem
-	private lateinit var settingsMenuItem: MenuItem
-	private val comicClicks = PublishRelay.create<Comic>()
-	private val comicLongClicks = PublishRelay.create<Comic>()
-	private val settingsClicks = PublishRelay.create<Unit>()
-	private val changeOriantationClicks = PublishRelay.create<Unit>()
-
+	private val actionBar: Toolbar by bindView(R.id.action_bar)
+	private val feedOrientationMenuItem by lazy { actionBar.menu.findItem(R.id.action_display_style) }
+	private val settingsMenuItem by lazy { actionBar.menu.findItem(R.id.action_settings) }
 	private val feedRecycler: RecyclerView by bindView(R.id.feed_recycler)
 	private val swipeRefreshLayout: SwipeRefreshLayout by bindView(R.id.swipe_refresh_layout)
 	private val noInternetWarningView: TextView by bindView(R.id.no_internet_warning)
 	private val feedController = SimpleEpoxyController()
+
+	private val comicClicks = PublishRelay.create<Comic>()
+	private val comicLongClicks = PublishRelay.create<Comic>()
 
 	val component by lazy {
 		DaggerFeedComponent.builder()
@@ -43,29 +44,48 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 	}
 
 	@Inject
-	internal lateinit var presenter: Presenter
+	lateinit var presenter: Presenter
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+
+        component.inject(this)
+
+
+        if(savedInstanceState != null) {
+            feedController.onRestoreInstanceState(savedInstanceState)
+            presenter.onRestoreInstanceState(savedInstanceState)
+        }
+
 		setContentView(R.layout.activity_feed)
-		title = resources.getString(R.string.feed_title)
+        title = resources.getString(R.string.feed_title)
 
-		component.inject(this)
+		/*
+		 actionbar menu has to be inflated manually in onCreate because the render
+		 function is called immediately after presenter.attachView in onStart
+		 and at that point the menu items we access in render wouldn't be initialized
+		 since onCreateOptionsMenu is called so late in the lifecycle
+		 */
+		actionBar.inflateMenu(R.menu.actionbar_feed)
 
-		feedRecycler.layoutManager = LinearLayoutManager(this)
+        feedRecycler.layoutManager = LinearLayoutManager(this)
 		feedRecycler.adapter = feedController.adapter
-		feedRecycler.setHasFixedSize(true)
 		feedRecycler.itemAnimator = DefaultItemAnimator()
+        feedRecycler.setHasFixedSize(true)
+    }
 
-		if(savedInstanceState != null) {
-			feedController.onRestoreInstanceState(savedInstanceState)
-			//TODO presenter.onRestoreInstanceState(savedInstanceState)
-		}
-	}
+    override fun onStart() {
+        super.onStart()
+		presenter.attachView(this)
+    }
 
 	override fun onStop() {
 		super.onStop()
-		presenter.detachView()
+		presenter.detachView(isFinishing)
+	}
+
+	override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+		return super.onCreateOptionsMenu(menu)
 	}
 
 	override fun onSaveInstanceState(outState: Bundle?) {
@@ -74,20 +94,9 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 		presenter.onSaveInstanceState(outState)
 	}
 
-	override fun onCreateOptionsMenu(menu: Menu): Boolean {
-		super.onCreateOptionsMenu(menu)
+	override fun setTitle(title: CharSequence?) = actionBar.setTitle(title)
 
-		menuInflater.inflate(R.menu.actionbar_feed, menu)
-
-		feedOrientationMenuItem = menu.findItem(R.id.action_display_style)
-		settingsMenuItem = menu.findItem(R.id.action_settings)
-
-		RxMenuItem.clicks(feedOrientationMenuItem).subscribe { changeOriantationClicks.accept(Unit) }
-		RxMenuItem.clicks(settingsMenuItem).subscribe { settingsClicks.accept(Unit) }
-
-		presenter.attechView(this)
-		return true
-	}
+	override fun setTitle(@StringRes titleId: Int) = actionBar.setTitle(titleId)
 
 	override fun render(state: State) {
 		when(state.feedOrientation) {
@@ -101,7 +110,7 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 			}
 		}
 
-		noInternetWarningView.visibility = if(state is State.NoInternet) View.VISIBLE else View.GONE
+		noInternetWarningView.visibility = if(state is State.NoInternet) VISIBLE else GONE
 
 		swipeRefreshLayout.isRefreshing = state is State.Refreshing
 
@@ -124,16 +133,20 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 
 	override fun doSideEffect(command: Command) {
 		when(command) {
-			is Command.ShowRefreshFailed -> Toast
-					.makeText(this, getString(R.string.toast_failed_to_refresh_feed), Toast.LENGTH_SHORT)
-					.show()
+			is Command.ShowLoadingFailed ->
+				Toast.makeText(this, getString(R.string.toast_failed_to_load_comics), Toast.LENGTH_SHORT)
+						.show()
+
+			is Command.ShowNoMoreComics ->
+				Toast.makeText(this, getString(R.string.toast_no_more_comics_to_load), Toast.LENGTH_SHORT)
+						.show()
 		}
 	}
 
 	override fun events() = Observable.merge(
-			settingsClicks
+			RxMenuItem.clicks(settingsMenuItem)
 					.map { Event.SettingsClicked },
-			changeOriantationClicks
+			RxMenuItem.clicks(feedOrientationMenuItem)
 					.map { Event.OrientationChanged },
 			feedRecycler.onEndReachedEvents()
 					.map { Event.EndReached },
@@ -150,7 +163,7 @@ inline fun <reified LM : RecyclerView.LayoutManager> RecyclerView.swapLayoutMana
 	val oldLayoutManager = this.layoutManager
 
 	// this check is important because
-	// the RV scrolls back to the top everytime layout manager is changed
+	// the RV scrolls back to the top every time layout manager is changed
 	if(oldLayoutManager is LM && oldLayoutManager::class == layoutManager::class)
 		return
 

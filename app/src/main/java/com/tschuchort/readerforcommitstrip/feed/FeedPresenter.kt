@@ -1,6 +1,5 @@
 package com.tschuchort.readerforcommitstrip.feed
 
-import android.util.Log
 import com.tschuchort.readerforcommitstrip.*
 import com.tschuchort.readerforcommitstrip.feed.FeedContract.*
 import io.reactivex.Observable
@@ -18,6 +17,8 @@ class FeedPresenter
 				logger: Logger)
 		: Presenter(uiScheduler, compScheduler, logger) {
 
+	private val TAG = "FeedPresenter"
+
 	override val initialState = State.Default(emptyList(), Orientation.VERTICAL)
 
 	override val events = Observable.merge(
@@ -29,10 +30,10 @@ class FeedPresenter
 							comicRepository.getNewestComics()
 						)
 								.subscribeOn(ioScheduler)
-								.doOnSubscribe { logger.d("", "loading more comics") }
+								.doOnSubscribe { logger.d(TAG, "loading more comics") }
 								.retryDelayed(delay = 1000, times = 5)
 								.map<Event>(Event::ComicsLoaded)
-								.doOnError { Log.e("Error", it.message) }
+								.doOnError { logger.e(TAG, it.message) }
 								.onErrorReturn(Event.LoadingFailed)
 					},
 			sideEffects.ofType<Command.RefreshNewest>()
@@ -43,10 +44,10 @@ class FeedPresenter
 							comicRepository.getNewestComics()
 						)
 								.subscribeOn(ioScheduler)
-								.doOnSubscribe { logger.d("", "refreshing comics") }
+								.doOnSubscribe { logger.d(TAG, "refreshing comics") }
 								.retryDelayed(delay = 1000, times = 5)
 								.map<Event>(Event::DataRefreshed)
-								.doOnError { Log.e("Error", it.message) }
+								.doOnError { logger.e(TAG, it.message) }
 								.onErrorReturn(Event.RefreshFailed)
 					})!!
 

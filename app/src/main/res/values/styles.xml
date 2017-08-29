@@ -2,11 +2,22 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme"
-           parent="Theme.AppCompat.Light.DarkActionBar">
+           parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
+
+    <style name="AppTheme.Toolbar"
+        parent="Theme.AppCompat">
+
+        <item name="actionMenuTextColor">@color/white</item>
+        <item name="background">@color/colorPrimary</item>
+        <item name="elevation">4dp</item>
+
+    </style>
+
+
 
 </resources>
