@@ -49,3 +49,22 @@ fun RecyclerView.LayoutManager.findLastVisibleItemPosition() = when(this) {
 	else                          -> throw IllegalArgumentException(
 			"can't get last visible item position for unknown recycler view layout manager")
 }
+
+inline fun <reified LM : RecyclerView.LayoutManager> RecyclerView.swapLayoutManager(layoutManager: LM) {
+	val oldLayoutManager = this.layoutManager
+
+	// this check is important because
+	// the RV scrolls back to the top every time layout manager is changed
+	if(oldLayoutManager is LM && oldLayoutManager::class == layoutManager::class)
+		return
+
+	val firstVisibleItemPos =
+			try { oldLayoutManager.findFirstVisibleItemPosition() }
+			catch (e: IllegalArgumentException) { RecyclerView.NO_POSITION }
+
+	this.layoutManager = layoutManager
+
+	if(firstVisibleItemPos != 0 && firstVisibleItemPos != RecyclerView.NO_POSITION) {
+		scrollToPosition(firstVisibleItemPos)
+	}
+}
