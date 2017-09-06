@@ -1,5 +1,7 @@
 package com.tschuchort.readerforcommitstrip.feed
 
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.annotation.StringRes
@@ -51,7 +53,6 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 
         component.inject(this)
 
-
         if(savedInstanceState != null) {
             feedController.onRestoreInstanceState(savedInstanceState)
             presenter.onRestoreInstanceState(savedInstanceState)
@@ -82,10 +83,6 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 	override fun onStop() {
 		super.onStop()
 		presenter.detachView(isFinishing)
-	}
-
-	override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-		return super.onCreateOptionsMenu(menu)
 	}
 
 	override fun onSaveInstanceState(outState: Bundle?) {

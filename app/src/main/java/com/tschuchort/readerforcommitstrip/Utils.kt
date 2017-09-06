@@ -10,7 +10,9 @@ import android.support.v7.widget.StaggeredGridLayoutManager
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import android.util.DisplayMetrics
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
+import java.lang.UnsupportedOperationException
 
 
 fun <T> Iterable<T>.dropUntilAfter(predicate: (T) -> Boolean) = dropWhile { !predicate(it) }.drop(1)
@@ -52,6 +54,84 @@ fun View.setPaddingRight(right: Int) = setPadding(paddingLeft, paddingTop, right
 fun View.setPaddingEnd(end: Int) = setPaddingRelative(paddingStart, paddingTop, end, paddingBottom)
 fun View.setPaddingTop(top: Int) = setPaddingRelative(paddingStart, top, paddingEnd, paddingBottom)
 fun View.setPaddingBottom(bottom: Int) = setPaddingRelative(paddingStart, paddingTop, paddingEnd, bottom)
+
+var View.marginLeft: Int
+	get() = (layoutParams as? ViewGroup.MarginLayoutParams)?.leftMargin ?: 0
+	set(value) {
+		try {
+			layoutParams = (layoutParams as ViewGroup.MarginLayoutParams).apply {
+				leftMargin = value
+			}
+		}
+		catch(e: ClassCastException) {
+			throw UnsupportedOperationException("can not set margin because view does not have MarginLayoutParams")
+		}
+	}
+
+var View.marginStart: Int
+	get() = (layoutParams as? ViewGroup.MarginLayoutParams)?.marginStart ?: 0
+	set(value) {
+		try {
+			layoutParams = (layoutParams as ViewGroup.MarginLayoutParams).apply {
+				marginStart = value
+			}
+		}
+		catch(e: ClassCastException) {
+			throw UnsupportedOperationException("can not set margin because view does not have MarginLayoutParams")
+		}
+	}
+
+var View.marginTop: Int
+	get() = (layoutParams as? ViewGroup.MarginLayoutParams)?.topMargin ?: 0
+	set(value) {
+		try {
+			layoutParams = (layoutParams as ViewGroup.MarginLayoutParams).apply {
+				topMargin = value
+			}
+		}
+		catch(e: ClassCastException) {
+			throw UnsupportedOperationException("can not set margin because view does not have MarginLayoutParams")
+		}
+	}
+
+var View.marginRight: Int
+	get() = (layoutParams as? ViewGroup.MarginLayoutParams)?.rightMargin ?: 0
+	set(value) {
+		try {
+			layoutParams = (layoutParams as ViewGroup.MarginLayoutParams).apply {
+				rightMargin = value
+			}
+		}
+		catch(e: ClassCastException) {
+			throw UnsupportedOperationException("can not set margin because view does not have MarginLayoutParams")
+		}
+	}
+
+var View.marginEnd: Int
+	get() = (layoutParams as? ViewGroup.MarginLayoutParams)?.marginEnd ?: 0
+	set(value) {
+		try {
+			layoutParams = (layoutParams as ViewGroup.MarginLayoutParams).apply {
+				marginEnd = value
+			}
+		}
+		catch(e: ClassCastException) {
+			throw UnsupportedOperationException("can not set margin because view does not have MarginLayoutParams")
+		}
+	}
+
+var View.marginBottom: Int
+	get() = (layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin ?: 0
+	set(value) {
+		try {
+			layoutParams = (layoutParams as ViewGroup.MarginLayoutParams).apply {
+				bottomMargin = value
+			}
+		}
+		catch(e: ClassCastException) {
+			throw UnsupportedOperationException("can not set margin because view does not have MarginLayoutParams")
+		}
+	}
 
 fun RecyclerView.LayoutManager.findFirstVisibleItemPosition() = when(this) {
 	is LinearLayoutManager                    -> findFirstVisibleItemPosition()

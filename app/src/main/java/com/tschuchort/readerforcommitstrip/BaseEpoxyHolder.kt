@@ -16,13 +16,17 @@ import kotlin.reflect.KProperty
  */
 abstract class BaseEpoxyHolder : EpoxyHolder() {
 	lateinit var context: Context
-	var itemView: View? = null
+	private var itemView: View? = null
 
 	@CallSuper
 	final override fun bindView(itemView: View) {
 		context = itemView.context
 		this.itemView = itemView
+
+		onViewCreated(context, itemView)
 	}
+
+	open fun onViewCreated(context: Context, view: View) {}
 
 	fun <V : View> bindView(id: Int): ReadOnlyProperty<BaseEpoxyHolder, V>
 		= Lazy { holder: BaseEpoxyHolder, _ -> holder.itemView!!.findViewById<V>(id) }
