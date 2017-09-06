@@ -1,12 +1,16 @@
 package com.tschuchort.readerforcommitstrip
 
+import android.content.Context
 import android.content.res.Resources
+import android.graphics.Point
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.StaggeredGridLayoutManager
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import android.util.DisplayMetrics
+import android.view.View
+import android.view.WindowManager
 
 
 fun <T> Iterable<T>.dropUntilAfter(predicate: (T) -> Boolean) = dropWhile { !predicate(it) }.drop(1)
@@ -21,7 +25,7 @@ fun <T> nonNull(value: T) = value != null
 fun <T> isNull(value: T) = value == null
 
 val Int.dp: Int
-	get() = pxToDp(this)
+	get() = dpToPx(this)
 
 fun dpToPx(dp: Int)
 		= Math.round(dp * (Resources.getSystem().displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT))
@@ -31,6 +35,23 @@ fun dpToPx(dp: Float)
 
 fun pxToDp(px: Int)
 		= Math.round(px / (Resources.getSystem().displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT))
+
+fun getScreenSize(context: Context): Point {
+	val size = Point()
+	(context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.getSize(size)
+	return size
+}
+
+fun getScreenWidth(context: Context) = getScreenSize(context).x
+
+fun getScreenHeight(context: Context) = getScreenSize(context).y
+
+fun View.setPaddingLeft(left: Int) = setPadding(left, paddingTop, paddingRight, paddingBottom)
+fun View.setPaddingStart(start: Int) = setPaddingRelative(start, paddingTop, paddingEnd, paddingBottom)
+fun View.setPaddingRight(right: Int) = setPadding(paddingLeft, paddingTop, right, paddingBottom)
+fun View.setPaddingEnd(end: Int) = setPaddingRelative(paddingStart, paddingTop, end, paddingBottom)
+fun View.setPaddingTop(top: Int) = setPaddingRelative(paddingStart, top, paddingEnd, paddingBottom)
+fun View.setPaddingBottom(bottom: Int) = setPaddingRelative(paddingStart, paddingTop, paddingEnd, bottom)
 
 fun RecyclerView.LayoutManager.findFirstVisibleItemPosition() = when(this) {
 	is LinearLayoutManager                    -> findFirstVisibleItemPosition()

@@ -17,8 +17,8 @@ class LoadingSpinnerItem : EpoxyModelWithView<ProgressBar>() {
 	override fun buildView(parent: ViewGroup) = ProgressBar(parent.context).apply {
 		layoutParams = MarginLayoutParams(LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 				.apply {
-					topMargin = 80.dp
-					bottomMargin = 88.dp // 8dp extra to account for margin on the bottom of card above
+					topMargin = 8.dp
+					bottomMargin = 16.dp // 8dp extra to account for margin on the bottom of card above
 				}
 
 		isIndeterminate = true
