@@ -1,9 +1,10 @@
 package com.tschuchort.readerforcommitstrip
 
 import android.app.Application
+import android.support.multidex.MultiDexApplication
 import com.squareup.leakcanary.LeakCanary
 
-class App : Application() {
+class App : MultiDexApplication() {
 
 	val component by lazy {
 		DaggerAppComponent.builder()
