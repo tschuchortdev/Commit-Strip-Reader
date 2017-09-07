@@ -9,6 +9,12 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="AppTheme.BlackStatusBar"
+           parent="AppTheme">
+
+        <item name="colorPrimaryDark">@color/black</item>
+    </style>
+
     <style name="AppTheme.Toolbar"
         parent="Theme.AppCompat">
 

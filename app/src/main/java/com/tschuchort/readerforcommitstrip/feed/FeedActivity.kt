@@ -1,7 +1,6 @@
 package com.tschuchort.readerforcommitstrip.feed
 
-import android.content.res.Configuration
-import android.content.res.Resources
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.annotation.StringRes
@@ -11,7 +10,6 @@ import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
-import android.view.Menu
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.TextView
@@ -24,6 +22,7 @@ import com.jakewharton.rxrelay2.PublishRelay
 import com.tschuchort.readerforcommitstrip.*
 import javax.inject.Inject
 import com.tschuchort.readerforcommitstrip.feed.FeedContract.*
+import com.tschuchort.readerforcommitstrip.zoom.ZoomActivity
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import io.reactivex.Observable
 
@@ -137,10 +136,16 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 			is Command.ShowNoMoreComics ->
 				Toast.makeText(this, getString(R.string.toast_no_more_comics_to_load), Toast.LENGTH_SHORT)
 						.show()
+
+			is Command.ShowEnlarged -> {
+				startActivity(Intent(this, ZoomActivity::class.java).apply {
+					putExtra(getString(R.string.extra_selected_comic), command.selectedComic)
+				})
+			}
 		}
 	}
 
-	override fun events() = Observable.merge(
+	override fun events() = Observable.mergeArray(
 			RxMenuItem.clicks(settingsMenuItem)
 					.map { Event.SettingsClicked },
 			RxMenuItem.clicks(feedOrientationMenuItem)
@@ -148,10 +153,9 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 			feedRecycler.onEndReachedEvents()
 					.map { Event.EndReached },
 			RxSwipeRefreshLayout.refreshes(swipeRefreshLayout)
-					.map { Event.Refresh }/*,
-					TODO
+					.map { Event.Refresh },
 			comicClicks
 					.map(Event::ComicClicked),
 			comicLongClicks
-					.map(Event::ComicLongClicked)*/)!!
+					.map(Event::ComicLongClicked))!!
 }

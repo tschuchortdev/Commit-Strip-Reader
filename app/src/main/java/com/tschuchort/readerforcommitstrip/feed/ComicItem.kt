@@ -63,6 +63,6 @@ open class ComicItem(
 					marginEnd = screenWidth / 6
 				}
 			}
-	}
+		}
 	}
 }
