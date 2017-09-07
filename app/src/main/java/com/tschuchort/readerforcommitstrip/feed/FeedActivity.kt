@@ -142,6 +142,8 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 					putExtra(getString(R.string.extra_selected_comic), command.selectedComic)
 				})
 			}
+
+			is Command.Share -> shareText(command.selectedComic.link, getString(R.string.share_call_to_action))
 		}
 	}
 

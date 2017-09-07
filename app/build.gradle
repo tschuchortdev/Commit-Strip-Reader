@@ -147,6 +147,8 @@ dependencies {
 
     implementation 'com.github.chrisbanes:PhotoView:2.0.0'
 
+    implementation 'com.github.michael-rapp:android-bottom-sheet:1.4.3'
+
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'org.hamcrest:hamcrest-library:1.3'
 }

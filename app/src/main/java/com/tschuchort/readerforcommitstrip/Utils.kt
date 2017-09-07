@@ -1,5 +1,6 @@
 package com.tschuchort.readerforcommitstrip
 
+import android.app.Activity
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Point
@@ -13,7 +14,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import java.lang.UnsupportedOperationException
-
+import android.content.Intent
+import android.os.Build
+import de.mrapp.android.bottomsheet.BottomSheet
 
 fun <T> Iterable<T>.dropUntilAfter(predicate: (T) -> Boolean) = dropWhile { !predicate(it) }.drop(1)
 
@@ -169,3 +172,26 @@ inline fun <reified LM : RecyclerView.LayoutManager> RecyclerView.swapLayoutMana
 		scrollToPosition(firstVisibleItemPos)
 	}
 }
+
+fun Activity.shareText(text: String, callToAction: String? = null) {
+	val sendIntent = Intent().apply {
+		action = Intent.ACTION_SEND
+		type = "text/plain"
+		putExtra(Intent.EXTRA_TEXT, text)
+	}
+
+	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+		startActivity(
+				if(callToAction != null)
+					Intent.createChooser(sendIntent, callToAction)
+				else
+					sendIntent)
+	}
+	else {
+		BottomSheet.Builder(this)
+				.setTitle(callToAction)
+				.setIntent(this, sendIntent)
+				.show()
+	}
+}
+

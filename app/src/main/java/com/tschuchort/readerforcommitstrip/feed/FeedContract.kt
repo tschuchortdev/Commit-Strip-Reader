@@ -17,11 +17,6 @@ interface FeedContract : Contract {
 				override val comics: List<Comic>,
 				override val feedOrientation: Orientation) : State()
 
-		data class ShareDialog(
-				val selectedComic: Comic,
-				override val comics: List<Comic>,
-				override val feedOrientation: Orientation) : State()
-
 		data class NoInternet(
 				override val comics: List<Comic>,
 				override val feedOrientation: Orientation) : State()
@@ -52,6 +47,7 @@ interface FeedContract : Contract {
 		data class LoadMore(val lastComic: Comic?, val lastIndex: Int) : Command()
 		data class RefreshNewest(val newestComic: Comic?) : Command()
 		data class ShowEnlarged(val selectedComic: Comic) : Command()
+		data class Share(val selectedComic: Comic) : Command()
 		object StartSettings : Command()
 		object ShowLoadingFailed : Command()
 		object ShowNoMoreComics : Command()

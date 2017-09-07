@@ -94,8 +94,7 @@ class FeedPresenter
 
 		is Event.ComicClicked       -> Pair(oldState, Command.ShowEnlarged(event.selectedComic))
 
-		is Event.ComicLongClicked   ->
-			Pair(State.ShareDialog(event.selectedComic, oldState.comics, oldState.feedOrientation), null)
+		is Event.ComicLongClicked   -> Pair(oldState, Command.Share(event.selectedComic))
 	}
 }
 
