@@ -31,6 +31,8 @@ interface Contract {
 		private val stateRelay by lazy { BehaviorRelay.createDefault(initialState)!! }
 		private val commandRelay by lazy { PublishRelay.create<C>()!! }
 
+
+		private var restoredState = false
 		private var attachedForFirstTime = true
 
 		var viewIsAttached = false
@@ -51,6 +53,8 @@ interface Contract {
 		 * initial state of the view
 		 */
 		protected abstract val initialState: S
+
+		protected open val initCommand: C? = null
 
 		/**
 		 * stream of other (non-ui) events that are fed into the reducer
@@ -77,8 +81,10 @@ interface Contract {
 		open fun onRestoreInstanceState(savedInstanceBundle: Bundle?) {
 			val lastState = savedInstanceBundle?.getParcelable<S>(BUNDLE_KEY)
 
-			if(lastState != null)
+			if(lastState != null) {
 				stateRelay.accept(lastState)
+				restoredState = true
+			}
 		}
 
 		/**
@@ -139,6 +145,9 @@ interface Contract {
 							if(cmd != null)
 								commandRelay.accept(cmd)
 						}
+
+				if(!restoredState && initCommand != null)
+					commandRelay.accept(initCommand!!)
 
 				attachedForFirstTime = false
 			}

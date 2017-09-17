@@ -19,7 +19,9 @@ class FeedPresenter
 
 	private val TAG = "FeedPresenter"
 
-	override val initialState = State.Default(emptyList(), Orientation.VERTICAL)
+	override val initialState = State.Refreshing(emptyList(), Orientation.VERTICAL)
+
+	override val initCommand = Command.RefreshNewest()
 
 	override val events = Observable.merge(
 			sideEffects.ofType<Command.LoadMore>()
@@ -68,7 +70,7 @@ class FeedPresenter
 
 		is Event.DataRefreshed      -> Pair(
 				State.Default((event.latestComics + oldState.comics), oldState.feedOrientation),
-				null)
+				Command.ScrollToTop)
 
 		is Event.RefreshFailed      ->
 			Pair(State.Default(oldState.comics, oldState.feedOrientation), Command.ShowLoadingFailed)
@@ -97,4 +99,3 @@ class FeedPresenter
 		is Event.ComicLongClicked   -> Pair(oldState, Command.Share(event.selectedComic))
 	}
 }
-

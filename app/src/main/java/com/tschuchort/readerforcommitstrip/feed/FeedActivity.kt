@@ -52,11 +52,6 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 
         component.inject(this)
 
-        if(savedInstanceState != null) {
-            feedController.onRestoreInstanceState(savedInstanceState)
-            presenter.onRestoreInstanceState(savedInstanceState)
-        }
-
 		setContentView(R.layout.activity_feed)
         title = resources.getString(R.string.feed_title)
 
@@ -72,6 +67,11 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 		feedRecycler.adapter = feedController.adapter
 		feedRecycler.itemAnimator = DefaultItemAnimator()
         feedRecycler.setHasFixedSize(true)
+
+		if(savedInstanceState != null) {
+			feedController.onRestoreInstanceState(savedInstanceState)
+			presenter.onRestoreInstanceState(savedInstanceState)
+		}
     }
 
     override fun onStart() {
@@ -144,6 +144,8 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 			}
 
 			is Command.Share -> shareText(command.selectedComic.link, getString(R.string.share_call_to_action))
+
+			is Command.ScrollToTop -> feedRecycler.smoothScrollToPosition(0)
 		}
 	}
 

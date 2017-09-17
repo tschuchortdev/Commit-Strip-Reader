@@ -44,13 +44,14 @@ interface FeedContract : Contract {
 	}
 
 	sealed class Command : Contract.Command {
-		data class LoadMore(val lastComic: Comic?, val lastIndex: Int) : Command()
-		data class RefreshNewest(val newestComic: Comic?) : Command()
+		data class LoadMore(val lastComic: Comic? = null, val lastIndex: Int = 0) : Command()
+		data class RefreshNewest(val newestComic: Comic? = null) : Command()
 		data class ShowEnlarged(val selectedComic: Comic) : Command()
 		data class Share(val selectedComic: Comic) : Command()
 		object StartSettings : Command()
 		object ShowLoadingFailed : Command()
 		object ShowNoMoreComics : Command()
+		object ScrollToTop: Command()
 	}
 
 	abstract class Presenter(uiScheduler: Scheduler, compScheduler: Scheduler, logger: Logger)
