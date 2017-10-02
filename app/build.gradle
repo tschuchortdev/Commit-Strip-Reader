@@ -10,8 +10,8 @@ apply plugin: "io.mironov.smuggler"
 
 def COMPILE_SDK_VERSION = 26
 def BUILD_TOOLS_VERSION = "26.0.0"
-def SUPPORT_V4_VERSION = "26.0.0"
-def SUPPORT_V7_VERSION = "26.0.0"
+def SUPPORT_V4_VERSION = "26.1.0"
+def SUPPORT_V7_VERSION = "26.1.0"
 
 kapt {
     correctErrorTypes = true
@@ -82,8 +82,8 @@ dependencies {
     implementation "com.android.support:cardview-v7:$SUPPORT_V7_VERSION"
     implementation "com.android.support.constraint:constraint-layout:1.0.2"
     androidTestImplementation "com.android.support:support-annotations:$SUPPORT_V7_VERSION"
-    androidTestImplementation 'com.android.support.test:runner:1.0.0'
-    androidTestImplementation 'com.android.support.test:rules:1.0.0'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test:rules:1.0.1'
 
     //implementation 'frankiesardo:icepick:3.2.0'
     //kapt 'frankiesardo:icepick-processor:3.2.0'

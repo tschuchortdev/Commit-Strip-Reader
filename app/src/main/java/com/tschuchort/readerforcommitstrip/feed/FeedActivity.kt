@@ -14,7 +14,6 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.TextView
 import android.widget.Toast
-import butterknife.bindView
 import com.airbnb.epoxy.SimpleEpoxyController
 import com.jakewharton.rxbinding2.support.v4.widget.RxSwipeRefreshLayout
 import com.jakewharton.rxbinding2.view.RxMenuItem
@@ -25,6 +24,7 @@ import com.tschuchort.readerforcommitstrip.feed.FeedContract.*
 import com.tschuchort.readerforcommitstrip.zoom.ZoomActivity
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import io.reactivex.Observable
+import kotterknife.bindView
 
 open class FeedActivity : AppCompatActivity(), FeedContract.View {
 	private val actionBar: Toolbar by bindView(R.id.action_bar)

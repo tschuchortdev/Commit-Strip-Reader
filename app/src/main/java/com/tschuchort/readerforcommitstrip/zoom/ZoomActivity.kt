@@ -2,12 +2,12 @@ package com.tschuchort.readerforcommitstrip.zoom
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import butterknife.bindView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.github.chrisbanes.photoview.PhotoView
 import com.tschuchort.readerforcommitstrip.Comic
 import com.tschuchort.readerforcommitstrip.R
+import kotterknife.bindView
 
 class ZoomActivity : AppCompatActivity() {
 	private lateinit var selectedComic: Comic
