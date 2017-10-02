@@ -2,21 +2,27 @@ package com.tschuchort.readerforcommitstrip
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.res.Resources
+import android.graphics.Bitmap
 import android.graphics.Point
+import android.os.Build
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.StaggeredGridLayoutManager
-import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import android.util.DisplayMetrics
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import java.lang.UnsupportedOperationException
-import android.content.Intent
-import android.os.Build
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.Target
 import de.mrapp.android.bottomsheet.BottomSheet
+import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
+import io.reactivex.Single
+import java.lang.UnsupportedOperationException
+import java.util.concurrent.CancellationException
+import java.util.concurrent.TimeUnit
 
 fun <T> Iterable<T>.dropUntilAfter(predicate: (T) -> Boolean) = dropWhile { !predicate(it) }.drop(1)
 
@@ -194,4 +200,39 @@ fun Activity.shareText(text: String, callToAction: String? = null) {
 				.show()
 	}
 }
+
+fun loadBitmap(ctx: Context, imageUrl: String,
+			   timeout: Long = 0, timeUnit: TimeUnit = TimeUnit.SECONDS)
+		= Single.create<Bitmap> { emitter ->
+
+	val target = Glide.with(ctx)
+			.load(imageUrl)
+			.asBitmap()
+			.into(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+
+	emitter.setCancellable {
+		val cancelledSucessfully = target.cancel(true)
+
+		if(!cancelledSucessfully && !target.isDone)
+			emitter.onError(CancellationFailure("failed to cancel bitmap loading"))
+	}
+
+	try {
+		val bitmap =
+				if (timeout > 0)
+					target.get(timeout, timeUnit)
+				else
+					target.get()
+
+		emitter.onSuccess(bitmap)
+	}
+	catch (e: CancellationException) {
+		// loading was succesfully cancelled, do nothing
+	}
+	catch (e: Throwable) {
+		emitter.onError(e)
+	}
+}!!
+
+class CancellationFailure(msg: String): Throwable(msg)
 

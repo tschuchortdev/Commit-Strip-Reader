@@ -1,7 +1,9 @@
 package com.tschuchort.readerforcommitstrip
 
 import android.app.Application
+import android.app.NotificationManager
 import android.content.res.Resources
+import com.firebase.jobdispatcher.FirebaseJobDispatcher
 import dagger.Component
 import io.reactivex.Scheduler
 import javax.inject.Singleton
@@ -17,6 +19,10 @@ interface AppComponent {
 
 	fun exposeComicRepo(): ComicRepository
 
+	fun exposeFirebaseJobDispatcher(): FirebaseJobDispatcher
+
+	fun exposeNotificationManager(): NotificationManager
+
 	@UiScheduler fun exposeUiScheduler(): Scheduler
 	@ComputationScheduler fun exposeCompScheduler(): Scheduler
 	@IoScheduler fun exposeIoScheduler(): Scheduler
@@ -26,4 +32,5 @@ interface AppComponent {
 	fun exposeLogger(): Logger
 
 	fun inject(app: App)
+	fun inject(notifService: DownloadLatestComicService)
 }

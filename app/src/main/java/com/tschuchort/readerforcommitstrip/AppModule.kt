@@ -1,19 +1,23 @@
 package com.tschuchort.readerforcommitstrip
 
 import android.app.Application
+import android.app.NotificationManager
+import android.app.Service
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.preference.PreferenceManager
 import android.util.Log
 import com.f2prateek.rx.preferences2.RxSharedPreferences
+import com.firebase.jobdispatcher.FirebaseJobDispatcher
+import com.firebase.jobdispatcher.GooglePlayDriver
 import dagger.Module
 import dagger.Provides
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import javax.inject.Singleton
 import javax.inject.Qualifier
+import javax.inject.Singleton
 
 
 /**
@@ -35,6 +39,14 @@ open class AppModule(val app: Application) {
 	@Provides
 	@Singleton
 	fun provideResources(): Resources = app.resources
+
+	@Provides
+	@Singleton
+	fun provideFirebaseJobDispatcher(@AppContext ctx: Context) = FirebaseJobDispatcher(GooglePlayDriver(ctx))
+
+	@Provides
+	@Singleton
+	fun provideNotificationManager(@AppContext ctx: Context) = ctx.getSystemService(Service.NOTIFICATION_SERVICE) as NotificationManager
 
 	@Provides
 	@UiScheduler
