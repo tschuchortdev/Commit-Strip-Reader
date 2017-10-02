@@ -149,17 +149,19 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 		}
 	}
 
-	override fun events() = Observable.mergeArray(
-			RxMenuItem.clicks(settingsMenuItem)
-					.map { Event.SettingsClicked },
-			RxMenuItem.clicks(feedOrientationMenuItem)
-					.map { Event.OrientationChanged },
-			feedRecycler.onEndReachedEvents()
-					.map { Event.EndReached },
-			RxSwipeRefreshLayout.refreshes(swipeRefreshLayout)
-					.map { Event.Refresh },
-			comicClicks
-					.map(Event::ComicClicked),
-			comicLongClicks
-					.map(Event::ComicLongClicked))!!
+	override val events by lazy {
+		Observable.mergeArray(
+				RxMenuItem.clicks(settingsMenuItem)
+						.map { Event.SettingsClicked },
+				RxMenuItem.clicks(feedOrientationMenuItem)
+						.map { Event.OrientationChanged },
+				feedRecycler.onEndReachedEvents()
+						.map { Event.EndReached },
+				RxSwipeRefreshLayout.refreshes(swipeRefreshLayout)
+						.map { Event.Refresh },
+				comicClicks
+						.map(Event::ComicClicked),
+				comicLongClicks
+						.map(Event::ComicLongClicked))!!
+	}
 }

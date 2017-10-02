@@ -114,7 +114,7 @@ interface Contract {
 
 			// subscribe to the view's events via a relay so we can unsubscribe
 			// from those events separately
-			viewDisposables += view.events().subscribeOn(uiScheduler).subscribe(viewEvents::accept)
+			viewDisposables += view.events.subscribeOn(uiScheduler).subscribe(viewEvents::accept)
 
 			// only setup the stream inside the presenter once, so it is persistent
 			// and parts of the stream that don't depend on the view can continue
@@ -213,6 +213,6 @@ interface Contract {
 		 *
 		 * called immediatley after the presenter is attached
 		 */
-		fun events(): Observable<E>
+		val events: Observable<E>
 	}
 }
