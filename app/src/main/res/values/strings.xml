@@ -11,4 +11,10 @@
     <string name="toast_no_more_comics_to_load">no more comics to load</string>
     <string name="extra_selected_comic">selectedComic</string>
     <string name="share_call_to_action">Share with...</string>
+    <string name="pref_title_notify_about_new_comics">Notify about new comics</string>
+    <string name="pref_desc_notify_about_new_comics">Send a notification when a new commitstrip is published</string>
+    <string name="pref_title_save_scroll_position">Save scroll position</string>
+    <string name="pref_desc_save_scroll_position">save scroll position when you reopen the app</string>
+    <string name="pref_key_notify_about_new_comics">pref_notify_about_new_comics</string>
+    <string name="pref_key_save_scroll_position">pref_save_scroll_position</string>
 </resources>

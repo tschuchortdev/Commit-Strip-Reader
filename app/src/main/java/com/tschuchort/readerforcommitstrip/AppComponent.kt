@@ -21,6 +21,8 @@ interface AppComponent {
 	@ComputationScheduler fun exposeCompScheduler(): Scheduler
 	@IoScheduler fun exposeIoScheduler(): Scheduler
 
+	fun exposePreferences(): SettingsRepository
+
 	fun exposeLogger(): Logger
 
 	fun inject(app: App)

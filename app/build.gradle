@@ -149,6 +149,8 @@ dependencies {
 
     implementation 'com.github.michael-rapp:android-bottom-sheet:1.4.3'
 
+    implementation 'com.f2prateek.rx.preferences2:rx-preferences:2.0.0-RC3'
+
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'org.hamcrest:hamcrest-library:1.3'
 }

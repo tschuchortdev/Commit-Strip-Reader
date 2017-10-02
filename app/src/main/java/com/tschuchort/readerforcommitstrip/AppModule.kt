@@ -2,8 +2,11 @@ package com.tschuchort.readerforcommitstrip
 
 import android.app.Application
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.res.Resources
+import android.preference.PreferenceManager
 import android.util.Log
+import com.f2prateek.rx.preferences2.RxSharedPreferences
 import dagger.Module
 import dagger.Provides
 import io.reactivex.Scheduler
@@ -53,6 +56,28 @@ open class AppModule(val app: Application) {
 		override fun i(tag: String, msg: String?) { Log.i(tag, msg ?: "") }
 		override fun w(tag: String, msg: String?) { Log.v(tag, msg ?: "") }
 		override fun e(tag: String, msg: String?) { Log.e(tag, msg ?: "") }
+	}
+
+	@Provides
+	@Singleton
+	fun provideSharedPreferences(@AppContext ctx: Context) = PreferenceManager.getDefaultSharedPreferences(ctx)!!
+
+	@Provides
+	@Singleton
+	fun provideRxSharedPreferences(prefs: SharedPreferences) = RxSharedPreferences.create(prefs)
+
+	@Provides
+	@Singleton
+	fun provideSettings(rxPrefs: RxSharedPreferences, res: Resources): SettingsRepository = object : SettingsRepository {
+		override val notifyAboutNewComics = object : SettingsRepository.Setting<Boolean> {
+			private val pref = rxPrefs.getBoolean(res.getString(R.string.pref_key_notify_about_new_comics))
+
+			override var value: Boolean
+				get() = pref.get()
+				set(value) { pref.set(value) }
+
+			override fun observe() = BehaviorObservable(pref.get(), pref.asObservable())
+		}
 	}
 }
 

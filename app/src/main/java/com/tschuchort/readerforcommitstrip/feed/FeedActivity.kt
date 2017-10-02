@@ -21,6 +21,7 @@ import com.jakewharton.rxrelay2.PublishRelay
 import com.tschuchort.readerforcommitstrip.*
 import javax.inject.Inject
 import com.tschuchort.readerforcommitstrip.feed.FeedContract.*
+import com.tschuchort.readerforcommitstrip.settings.SettingsActivity
 import com.tschuchort.readerforcommitstrip.zoom.ZoomActivity
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import io.reactivex.Observable
@@ -146,6 +147,8 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 			is Command.Share -> shareText(command.selectedComic.link, getString(R.string.share_call_to_action))
 
 			is Command.ScrollToTop -> feedRecycler.smoothScrollToPosition(0)
+
+			is Command.StartSettings -> startActivity(Intent(this, SettingsActivity::class.java))
 		}
 	}
 
