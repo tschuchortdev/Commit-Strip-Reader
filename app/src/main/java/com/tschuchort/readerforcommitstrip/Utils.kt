@@ -7,6 +7,8 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Point
 import android.os.Build
+import android.support.v4.app.NavUtils
+import android.support.v4.app.TaskStackBuilder
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -235,4 +237,20 @@ fun loadBitmap(ctx: Context, imageUrl: String,
 }!!
 
 class CancellationFailure(msg: String): Throwable(msg)
+
+
+fun Activity.navigateUp() {
+	val upIntent = NavUtils.getParentActivityIntent(this)
+
+	// if this task is the root, the parent cant be in the back stack anymore, so we need to
+	// recreate it anyway. Otherwise it will just navigate back to the home screen
+	if (NavUtils.shouldUpRecreateTask(this, upIntent) || isTaskRoot) {
+		TaskStackBuilder.create(this).addNextIntentWithParentStack(upIntent).startActivities()
+	}
+	// parent activity still exists in back stack, so we set flags to navigate and restore state
+	else {
+		upIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+		NavUtils.navigateUpTo(this, upIntent)
+	}
+}
 

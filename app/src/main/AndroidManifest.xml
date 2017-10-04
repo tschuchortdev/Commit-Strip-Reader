@@ -13,7 +13,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity android:name=".feed.FeedActivity">
+        <activity
+            android:name=".feed.FeedActivity"
+            android:launchMode="singleTop">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -23,10 +26,26 @@
 
         <activity
             android:name=".zoom.ZoomActivity"
-            android:theme="@style/AppTheme.BlackStatusBar" />
+            android:theme="@style/AppTheme.BlackStatusBar"
+            android:parentActivityName=".feed.FeedActivity">
+
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.tschuchort.readerforcommitstrip.feed.FeedActivity" />
+
+        </activity>
 
         <activity
-            android:name=".settings.SettingsActivity"/>
+            android:name=".settings.SettingsActivity"
+            android:parentActivityName=".feed.FeedActivity">
+
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.tschuchort.readerforcommitstrip.feed.FeedActivity" />
+
+        </activity>
 
         <service
             android:exported="false"

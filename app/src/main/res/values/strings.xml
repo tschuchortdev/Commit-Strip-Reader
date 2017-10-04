@@ -20,4 +20,5 @@
     <string name="pref_key_latest_comic_date">pref_latest_comic</string>
     <string name="notification_title_new_comic">New Commitstrip uploaded</string>
     <string name="notif_channel_title_new_comics">New CommitStrips</string>
+    <string name="action_share_commitstrip">Share CommitStrip</string>
 </resources>

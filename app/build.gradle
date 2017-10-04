@@ -9,7 +9,7 @@ apply plugin: "io.mironov.smuggler"
 
 
 def COMPILE_SDK_VERSION = 26
-def BUILD_TOOLS_VERSION = "26.0.0"
+def BUILD_TOOLS_VERSION = "26.0.2"
 def SUPPORT_V4_VERSION = "26.1.0"
 def SUPPORT_V7_VERSION = "26.1.0"
 
