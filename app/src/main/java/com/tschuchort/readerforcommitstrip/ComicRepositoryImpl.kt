@@ -43,7 +43,6 @@ class ComicRepositoryImpl
 
 
 	init {
-		getNewestComic().subscribe { comic: Comic -> latestComicDateCache = comic.date }
 		jobDispatcher.mustSchedule(latestComicDownloadJob)
 	}
 
@@ -67,7 +66,7 @@ class ComicRepositoryImpl
 	}
 
 	fun onServiceDownloadedLatestComic(latestComic: Comic): Completable {
-		if(latestComicDateCache != latestComic.date) {
+		if(latestComicDateCache != latestComic.date && latestComicDateCache != null) {
 			latestComicDateCache = latestComic.date
 
 			val completables = latestComicCallbacks.fold(ArrayList<Completable>()) { acc, it ->
@@ -78,6 +77,8 @@ class ComicRepositoryImpl
 			return Completable.merge(completables)
 		}
 		else {
+			latestComicDateCache = latestComic.date
+
 		    return Completable.complete()
 		}
 	}
