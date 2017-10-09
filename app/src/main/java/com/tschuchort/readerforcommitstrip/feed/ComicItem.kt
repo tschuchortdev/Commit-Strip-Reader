@@ -2,7 +2,6 @@ package com.tschuchort.readerforcommitstrip.feed
 
 import android.content.Context
 import android.content.res.Configuration
-import android.support.constraint.ConstraintLayout
 import android.support.v7.widget.CardView
 import android.view.View
 import android.widget.ImageView
@@ -34,7 +33,7 @@ open class ComicItem(
 
 		Glide.with(holder.context)
 				.load(comic.imageUrl)
-				.diskCacheStrategy(DiskCacheStrategy.RESULT)
+				.diskCacheStrategy(DiskCacheStrategy.SOURCE)
 				.crossFade()
 				.into(holder.comicView)
 	}
