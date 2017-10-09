@@ -17,11 +17,14 @@ import android.util.DisplayMetrics
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import com.bumptech.glide.GenericRequestBuilder
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import de.mrapp.android.bottomsheet.BottomSheet
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import io.reactivex.Single
+import java.lang.Exception
 import java.lang.UnsupportedOperationException
 import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
@@ -253,4 +256,17 @@ fun Activity.navigateUp() {
 		NavUtils.navigateUpTo(this, upIntent)
 	}
 }
+
+fun <A, B, C, D> GenericRequestBuilder<A, B, C, D>.progressView(progressView: View) =
+	listener(object : RequestListener<A,D> {
+		override fun onResourceReady(resource: D, model: A, target: Target<D>?, isFromMemoryCache: Boolean, isFirstResource: Boolean): Boolean {
+			progressView.visibility = View.GONE
+			return false
+		}
+
+		override fun onException(e: Exception?, model: A, target: Target<D>?, isFirstResource: Boolean): Boolean {
+			progressView.visibility = View.GONE
+			return false
+		}
+	})
 
