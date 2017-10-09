@@ -11,6 +11,7 @@ import android.util.Log
 import com.f2prateek.rx.preferences2.RxSharedPreferences
 import com.firebase.jobdispatcher.FirebaseJobDispatcher
 import com.firebase.jobdispatcher.GooglePlayDriver
+import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import dagger.Module
 import dagger.Provides
 import io.reactivex.Scheduler
@@ -90,6 +91,16 @@ open class AppModule(val app: Application) {
 
 			override fun observe() = BehaviorObservable(pref.get(), pref.asObservable())
 		}
+	}
+
+	@Provides
+	@Singleton
+	fun provideSystemManager(@AppContext ctx: Context): SystemManager = object : SystemManager {
+		override fun observeInternetConnectivity()
+				= ReactiveNetwork.observeNetworkConnectivity(ctx).map { it.isAvailable }
+
+		override val isInternetConnected
+				= ReactiveNetwork.checkInternetConnectivity()
 	}
 }
 

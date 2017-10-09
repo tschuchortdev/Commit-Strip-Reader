@@ -10,24 +10,24 @@ interface FeedContract : Contract {
 	enum class Orientation { VERTICAL, HORIZONTAL }
 
 	sealed class State: Contract.State {
-		open val comics: List<Comic> = emptyList()
-		open val feedOrientation: Orientation = Orientation.VERTICAL
+		open var comics: List<Comic> = emptyList()
+		open var feedOrientation: Orientation = Orientation.VERTICAL
+		abstract var internetConnected: Boolean
 
 		data class Default(
-				override val comics: List<Comic>,
-				override val feedOrientation: Orientation) : State()
-
-		data class NoInternet(
-				override val comics: List<Comic>,
-				override val feedOrientation: Orientation) : State()
+				override var comics: List<Comic>,
+				override var feedOrientation: Orientation,
+				override var internetConnected: Boolean) : State()
 
 		data class LoadingMore(
-				override val comics: List<Comic>,
-				override val feedOrientation: Orientation) : State()
+				override var comics: List<Comic>,
+				override var feedOrientation: Orientation,
+				override var internetConnected: Boolean) : State()
 
 		data class Refreshing(
-				override val comics: List<Comic>,
-				override val feedOrientation: Orientation) : State()
+				override var comics: List<Comic>,
+				override var feedOrientation: Orientation,
+				override var internetConnected: Boolean) : State()
 	}
 
 	sealed class Event : Contract.Event {
@@ -41,6 +41,7 @@ interface FeedContract : Contract {
 		object RefreshFailed : Event()
 		data class ComicClicked(val selectedComic: Comic): Event()
 		data class ComicLongClicked(val selectedComic: Comic): Event()
+		data class NetworkStatusChanged(val connected: Boolean): Event()
 	}
 
 	sealed class Command : Contract.Command {
@@ -51,7 +52,7 @@ interface FeedContract : Contract {
 		object StartSettings : Command()
 		object ShowLoadingFailed : Command()
 		object ShowNoMoreComics : Command()
-		object ScrollToTop: Command()
+		object ScrollToTop : Command()
 	}
 
 	abstract class Presenter(uiScheduler: Scheduler, compScheduler: Scheduler, logger: Logger)

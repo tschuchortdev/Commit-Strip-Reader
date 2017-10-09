@@ -14,6 +14,7 @@ class FeedModule {
 						 @UiScheduler uiScheduler: Scheduler,
 						 @ComputationScheduler compScheduler: Scheduler,
 						 @IoScheduler ioScheduler: Scheduler,
+						 systemManager: SystemManager,
 						 logger: Logger): FeedContract.Presenter
-			= FeedPresenter(repository, uiScheduler, compScheduler, ioScheduler, logger)
+			= FeedPresenter(repository, uiScheduler, compScheduler, ioScheduler, systemManager, logger)
 }

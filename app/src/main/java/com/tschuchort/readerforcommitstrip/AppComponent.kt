@@ -31,6 +31,8 @@ interface AppComponent {
 
 	fun exposeLogger(): Logger
 
+	fun exposeSystemManager(): SystemManager
+
 	fun inject(app: App)
 	fun inject(notifService: DownloadLatestComicService)
 }

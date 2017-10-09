@@ -3,6 +3,7 @@
           xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application
         android:name=".App"
@@ -26,7 +27,7 @@
 
         <activity
             android:name=".zoom.ZoomActivity"
-            android:theme="@style/AppTheme.BlackStatusBar"
+            android:theme="@style/AppTheme.BlackAndWhite"
             android:parentActivityName=".feed.FeedActivity">
 
             <!-- Parent activity meta-data to support 4.0 and lower -->

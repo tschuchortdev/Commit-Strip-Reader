@@ -1,11 +1,11 @@
 package com.tschuchort.readerforcommitstrip.feed
 
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.annotation.StringRes
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.SwipeRefreshLayout
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -19,13 +19,13 @@ import com.jakewharton.rxbinding2.support.v4.widget.RxSwipeRefreshLayout
 import com.jakewharton.rxbinding2.view.RxMenuItem
 import com.jakewharton.rxrelay2.PublishRelay
 import com.tschuchort.readerforcommitstrip.*
-import javax.inject.Inject
 import com.tschuchort.readerforcommitstrip.feed.FeedContract.*
 import com.tschuchort.readerforcommitstrip.settings.SettingsActivity
 import com.tschuchort.readerforcommitstrip.zoom.ZoomActivity
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import io.reactivex.Observable
 import kotterknife.bindView
+import javax.inject.Inject
 
 open class FeedActivity : AppCompatActivity(), FeedContract.View {
 	private val actionBar: Toolbar by bindView(R.id.action_bar)
@@ -107,7 +107,7 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 			}
 		}
 
-		noInternetWarningView.visibility = if(state is State.NoInternet) VISIBLE else GONE
+		noInternetWarningView.visibility = if(state.internetConnected) GONE else VISIBLE
 
 		swipeRefreshLayout.isRefreshing = state is State.Refreshing
 

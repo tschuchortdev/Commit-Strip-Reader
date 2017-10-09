@@ -14,12 +14,13 @@ class FeedPresenter
 				@UiScheduler uiScheduler: Scheduler,
 				@ComputationScheduler compScheduler: Scheduler,
 				@IoScheduler val ioScheduler: Scheduler,
+				systemManager: SystemManager,
 				logger: Logger)
 		: Presenter(uiScheduler, compScheduler, logger) {
 
 	private val TAG = "FeedPresenter"
 
-	override val initialState = State.Refreshing(emptyList(), Orientation.VERTICAL)
+	override val initialState = State.Refreshing(emptyList(), Orientation.VERTICAL, true)
 
 	override val initCommand = Command.RefreshNewest()
 
@@ -51,7 +52,12 @@ class FeedPresenter
 								.map<Event>(Event::DataRefreshed)
 								.doOnError { logger.e(TAG, it.message) }
 								.onErrorReturn(Event.RefreshFailed)
-					})!!
+					},
+			systemManager.observeInternetConnectivity()
+					.subscribeOn(ioScheduler)
+					.distinctUntilChanged()
+					.doOnNext { logger.e(TAG, "network changed: $it")}
+					.map(Event::NetworkStatusChanged))!!
 
 	override fun reduce(oldState: State, event: Event) = when (event) {
 		is Event.OrientationChanged -> Pair(
@@ -61,34 +67,38 @@ class FeedPresenter
 								if (oldState.feedOrientation == Orientation.VERTICAL)
 									Orientation.HORIZONTAL
 								else
-									Orientation.VERTICAL),
+									Orientation.VERTICAL,
+						internetConnected = oldState.internetConnected),
 				null)
 
 		is Event.Refresh            -> Pair(
-				State.Refreshing(oldState.comics, oldState.feedOrientation),
+				State.Refreshing(oldState.comics, oldState.feedOrientation, oldState.internetConnected),
 				Command.RefreshNewest(oldState.comics.firstOrNull()))
 
 		is Event.DataRefreshed      -> Pair(
-				State.Default((event.latestComics + oldState.comics), oldState.feedOrientation),
+				State.Default((event.latestComics + oldState.comics), oldState.feedOrientation, oldState.internetConnected),
 				Command.ScrollToTop)
 
-		is Event.RefreshFailed      ->
-			Pair(State.Default(oldState.comics, oldState.feedOrientation), Command.ShowLoadingFailed)
+		is Event.RefreshFailed      -> Pair(
+				State.Default(oldState.comics, oldState.feedOrientation, oldState.internetConnected),
+				Command.ShowLoadingFailed)
 
 		is Event.EndReached         ->
 			if(oldState is State.LoadingMore)
 				Pair(oldState, null)
 			else
 				Pair(
-					State.LoadingMore(oldState.comics, oldState.feedOrientation),
+					State.LoadingMore(oldState.comics, oldState.feedOrientation, oldState.internetConnected),
 					Command.LoadMore(oldState.comics.lastOrNull(), oldState.comics.lastIndex))
 
 		is Event.LoadingFailed      ->
-			Pair(State.Default(oldState.comics, oldState.feedOrientation), Command.ShowLoadingFailed)
+			Pair(State.Default(oldState.comics, oldState.feedOrientation, oldState.internetConnected), Command.ShowLoadingFailed)
 
 		is Event.ComicsLoaded       ->
 			if(event.newComics.isNotEmpty())
-				Pair(State.Default((oldState.comics + event.newComics), oldState.feedOrientation), null)
+				Pair(State.Default(
+						(oldState.comics + event.newComics), oldState.feedOrientation, oldState.internetConnected),
+						null)
 			else
 				Pair(oldState, Command.ShowNoMoreComics)
 
@@ -97,5 +107,9 @@ class FeedPresenter
 		is Event.ComicClicked       -> Pair(oldState, Command.ShowEnlarged(event.selectedComic))
 
 		is Event.ComicLongClicked   -> Pair(oldState, Command.Share(event.selectedComic))
+
+		is Event.NetworkStatusChanged -> Pair(
+				oldState.apply { internetConnected = event.connected },
+				null)
 	}
 }

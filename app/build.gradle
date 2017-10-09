@@ -159,6 +159,8 @@ dependencies {
 
     implementation 'com.f2prateek.rx.preferences2:rx-preferences:2.0.0-RC3'
 
+    implementation 'com.github.pwittchen:reactivenetwork-rx2:0.12.1'
+
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'org.hamcrest:hamcrest-library:1.3'
 }
