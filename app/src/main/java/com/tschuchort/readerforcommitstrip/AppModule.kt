@@ -81,17 +81,8 @@ open class AppModule(val app: Application) {
 
 	@Provides
 	@Singleton
-	fun provideSettings(rxPrefs: RxSharedPreferences, res: Resources): SettingsRepository = object : SettingsRepository {
-		override val notifyAboutNewComics = object : SettingsRepository.Setting<Boolean> {
-			private val pref = rxPrefs.getBoolean(res.getString(R.string.pref_key_notify_about_new_comics))
-
-			override var value: Boolean
-				get() = pref.get()
-				set(value) { pref.set(value) }
-
-			override fun observe() = BehaviorObservable(pref.get(), pref.asObservable())
-		}
-	}
+	fun provideSettings(@AppContext ctx: Context, rxPrefs: RxSharedPreferences, res: Resources): SettingsRepository
+			= SettingsRepositoryImpl(ctx, rxPrefs, res)
 
 	@Provides
 	@Singleton

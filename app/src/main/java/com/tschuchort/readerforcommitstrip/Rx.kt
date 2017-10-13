@@ -1,13 +1,10 @@
 package com.tschuchort.readerforcommitstrip
 
 import io.reactivex.*
-import io.reactivex.disposables.Disposable
-import io.reactivex.observers.ResourceObserver
 import io.reactivex.rxkotlin.zipWith
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import org.reactivestreams.Publisher
-import org.reactivestreams.Subscriber
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
@@ -195,10 +192,8 @@ fun <T> Flowable<T>.onErrorReturn(value: T) = onErrorReturnItem(value)!!
 /**
  * a BehaviorObservable is an Observable that emits its last value on subscribtion
  * like a BehaviorSubject but without the possibility to call accept() from outside
- *
  */
 class BehaviorObservable<T>(initialValue: T, source: Observable<T>) : Observable<T>() {
-
 	private val subject = BehaviorSubject.createDefault(initialValue)
 
 	init {
