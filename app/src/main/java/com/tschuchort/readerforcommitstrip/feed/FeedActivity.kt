@@ -25,6 +25,7 @@ import com.tschuchort.readerforcommitstrip.zoom.ZoomActivity
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import io.reactivex.Observable
 import kotterknife.bindView
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 open class FeedActivity : AppCompatActivity(), FeedContract.View {
@@ -159,6 +160,7 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 				RxMenuItem.clicks(feedOrientationMenuItem)
 						.map { Event.OrientationChanged },
 				feedRecycler.onEndReachedEvents()
+						.throttleFirst(1500, TimeUnit.MILLISECONDS)
 						.map { Event.EndReached },
 				RxSwipeRefreshLayout.refreshes(swipeRefreshLayout)
 						.map { Event.Refresh },
