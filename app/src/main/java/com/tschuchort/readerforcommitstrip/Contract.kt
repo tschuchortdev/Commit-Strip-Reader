@@ -9,6 +9,7 @@ import io.mironov.smuggler.AutoParcelable
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.disposables.Disposable
+import timber.log.Timber
 import java.io.Serializable
 
 interface Contract {
@@ -18,8 +19,7 @@ interface Contract {
 
 	abstract class Presenter<S : State, E : Event, in V : View<S,E,C>, C : Command>(
 			protected val uiScheduler: Scheduler,
-			protected val compScheduler: Scheduler,
-			protected val logger: Logger) {
+			protected val compScheduler: Scheduler) {
 
 		companion object {
 			private const val BUNDLE_KEY = "presenter last state"
@@ -175,22 +175,22 @@ interface Contract {
 			viewIsAttached = false
 
 			if(isFinishing) {
-				logger.d("Presenter", "presenter is finishing")
+				Timber.d("presenter is finishing")
 				backgroundStreamDisposable?.dispose()
 				attachedForFirstTime = false
 			}
 		}
 
 		protected open fun logEvent(event: E) {
-			logger.i("Event", event::class.simpleName!!)
+			Timber.i("Event: $event")
 		}
 
 		protected open fun logState(state: S) {
-			logger.i("State", state.toString())
+			Timber.i("State: $state")
 		}
 
 		protected open fun logSideEffect(command: C) {
-			logger.i("Command", command.toString())
+			Timber.i("Command: $command")
 		}
 	}
 

@@ -29,8 +29,6 @@ interface AppComponent {
 
 	fun exposePreferences(): SettingsRepository
 
-	fun exposeLogger(): Logger
-
 	fun exposeSystemManager(): SystemManager
 
 	fun inject(app: App)

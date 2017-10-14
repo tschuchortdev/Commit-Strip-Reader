@@ -14,11 +14,8 @@ class FeedPresenter
 				@UiScheduler uiScheduler: Scheduler,
 				@ComputationScheduler compScheduler: Scheduler,
 				@IoScheduler val ioScheduler: Scheduler,
-				systemManager: SystemManager,
-				logger: Logger)
-		: Presenter(uiScheduler, compScheduler, logger) {
-
-	private val TAG = "FeedPresenter"
+				systemManager: SystemManager)
+		: Presenter(uiScheduler, compScheduler) {
 
 	override val initialState = State.Refreshing(emptyList(), Orientation.VERTICAL, true)
 
@@ -33,10 +30,8 @@ class FeedPresenter
 							comicRepository.getNewestComics()
 						)
 								.subscribeOn(ioScheduler)
-								.doOnSubscribe { logger.d(TAG, "loading more comics") }
 								.retryDelayed(delay = 1000, times = 5)
 								.map<Event>(Event::ComicsLoaded)
-								.doOnError { logger.e(TAG, it.message) }
 								.onErrorReturn(Event.LoadingFailed)
 					},
 			sideEffects.ofType<Command.RefreshNewest>()
@@ -47,16 +42,13 @@ class FeedPresenter
 							comicRepository.getNewestComics()
 						)
 								.subscribeOn(ioScheduler)
-								.doOnSubscribe { logger.d(TAG, "refreshing comics") }
 								.retryDelayed(delay = 1000, times = 5)
 								.map<Event>(Event::DataRefreshed)
-								.doOnError { logger.e(TAG, it.message) }
 								.onErrorReturn(Event.RefreshFailed)
 					},
 			systemManager.observeInternetConnectivity()
 					.subscribeOn(ioScheduler)
 					.distinctUntilChanged()
-					.doOnNext { logger.e(TAG, "network changed: $it")}
 					.map(Event::NetworkStatusChanged))!!
 
 	override fun reduce(oldState: State, event: Event) = when (event) {

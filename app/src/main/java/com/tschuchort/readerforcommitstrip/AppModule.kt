@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.preference.PreferenceManager
-import android.util.Log
 import com.f2prateek.rx.preferences2.RxSharedPreferences
 import com.firebase.jobdispatcher.FirebaseJobDispatcher
 import com.firebase.jobdispatcher.GooglePlayDriver
@@ -60,16 +59,6 @@ open class AppModule(val app: Application) {
 	@Provides
 	@IoScheduler
 	fun provideIoScheduler(): Scheduler = Schedulers.io()
-
-	@Provides
-	@Singleton
-	fun provideLogger(): Logger = object : Logger {
-		override fun v(tag: String, msg: String?) { Log.v(tag, msg ?: "") }
-		override fun d(tag: String, msg: String?) { Log.d(tag, msg ?: "") }
-		override fun i(tag: String, msg: String?) { Log.i(tag, msg ?: "") }
-		override fun w(tag: String, msg: String?) { Log.v(tag, msg ?: "") }
-		override fun e(tag: String, msg: String?) { Log.e(tag, msg ?: "") }
-	}
 
 	@Provides
 	@Singleton

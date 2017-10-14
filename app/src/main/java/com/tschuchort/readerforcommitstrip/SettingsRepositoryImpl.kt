@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Resources
 import android.preference.PreferenceManager
 import com.f2prateek.rx.preferences2.RxSharedPreferences
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,6 +17,7 @@ class SettingsRepositoryImpl
 		// we need to initialize the shared preferences manually, or else the default values
 		// won't be set until the SettingsActivity is started for the first time
 		PreferenceManager.setDefaultValues(ctx, R.xml.preferences, false)
+		Timber.d("initialized shared preferences")
 	}
 
 	override val notifyAboutNewComics = BooleanPreference(res.getString(R.string.pref_key_notify_about_new_comics))

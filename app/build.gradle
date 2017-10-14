@@ -7,7 +7,6 @@ apply plugin: 'kotlin-android-extensions'
 // smuggler plugin must be applied last
 apply plugin: "io.mironov.smuggler"
 
-
 def COMPILE_SDK_VERSION = 26
 def BUILD_TOOLS_VERSION = "26.0.2"
 def SUPPORT_V4_VERSION = "26.1.0"
@@ -71,6 +70,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation 'com.android.support:multidex:1.0.2'
+    implementation 'com.google.firebase:firebase-crash:11.4.2'
     androidTestImplementation 'com.android.support:multidex-instrumentation:1.0.2'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
@@ -161,6 +161,12 @@ dependencies {
 
     implementation 'com.github.pwittchen:reactivenetwork-rx2:0.12.1'
 
+    implementation 'com.jakewharton.timber:timber:4.5.1'
+
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'org.hamcrest:hamcrest-library:1.3'
 }
+
+// this needs to be applied after dependencies for some reason
+// so it can determine what version to use
+apply plugin: 'com.google.gms.google-services'

@@ -11,6 +11,7 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.rxkotlin.zipWith
 import io.reactivex.schedulers.Schedulers
 import retrofit2.HttpException
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -134,9 +135,6 @@ class DownloadLatestComicService : JobService() {
 	@Inject
 	protected lateinit var comicRepo: ComicRepository
 
-	@Inject
-	protected lateinit var logger: Logger
-
 	private var networkRequest: Disposable? = null
 
 	override fun onCreate() {
@@ -152,7 +150,7 @@ class DownloadLatestComicService : JobService() {
 				.subscribe({
 					jobFinished(jobParams, false)
 				}, { error ->
-					logger.e(javaClass.simpleName,"failed to download latest comic: " + error.message)
+					Timber.e(error, "failed to download latest comic in background service")
 					jobFinished(jobParams, true)
 				})
 

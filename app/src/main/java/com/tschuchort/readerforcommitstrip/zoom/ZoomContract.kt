@@ -2,7 +2,6 @@ package com.tschuchort.readerforcommitstrip.zoom
 
 import com.tschuchort.readerforcommitstrip.Comic
 import com.tschuchort.readerforcommitstrip.Contract
-import com.tschuchort.readerforcommitstrip.Logger
 import io.reactivex.Scheduler
 
 interface ZoomContract : Contract {
@@ -19,8 +18,8 @@ interface ZoomContract : Contract {
 		object NavigateUp : Command()
 	}
 
-	abstract class Presenter(uiScheduler: Scheduler, compScheduler: Scheduler, logger: Logger)
-		: Contract.Presenter<State, Event, View, Command>(uiScheduler, compScheduler, logger)
+	abstract class Presenter(uiScheduler: Scheduler, compScheduler: Scheduler)
+		: Contract.Presenter<State, Event, View, Command>(uiScheduler, compScheduler)
 
 	interface View : Contract.View<State, Event, Command>
 }

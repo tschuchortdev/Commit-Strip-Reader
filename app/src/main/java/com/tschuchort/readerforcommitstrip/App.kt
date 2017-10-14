@@ -10,12 +10,14 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.support.multidex.MultiDexApplication
 import android.support.v4.app.NotificationCompat
+import com.google.firebase.crash.FirebaseCrash
 import com.squareup.leakcanary.LeakCanary
 import com.tschuchort.readerforcommitstrip.zoom.ZoomActivity
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -30,9 +32,6 @@ class App : MultiDexApplication() {
 
 	@Inject
 	lateinit protected var comicRepo: ComicRepository
-
-	@Inject
-	lateinit protected var logger: Logger
 
 	private var newComicsSubscription: Disposable? = null
 
@@ -54,6 +53,15 @@ class App : MultiDexApplication() {
 		component.inject(this)
 
 		LeakCanary.install(this)
+
+		if(BuildConfig.DEBUG) {
+			FirebaseCrash.setCrashCollectionEnabled(false)
+			Timber.plant(Timber.DebugTree())
+		}
+		else {
+			FirebaseCrash.setCrashCollectionEnabled(true)
+			Timber.plant(FirebaseCrashReportTree())
+		}
 
 		// start or stop notification service when settings change
 		settings.notifyAboutNewComics.observe().subscribe { notifySetting ->
@@ -111,7 +119,7 @@ class App : MultiDexApplication() {
 					notificationManager.notify(Random().nextInt(), notification)
 				}
 				.doOnError { error ->
-					logger.e("App", "failed to send notification: ${error.message} \n ${error.stackTrace}")
+					Timber.e(error, "failed to show notification")
 				}
 				.toCompletable()
 }
