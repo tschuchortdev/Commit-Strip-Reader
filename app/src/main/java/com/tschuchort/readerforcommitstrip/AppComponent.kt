@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.NotificationManager
 import android.content.res.Resources
 import com.firebase.jobdispatcher.FirebaseJobDispatcher
+import com.google.firebase.analytics.FirebaseAnalytics
 import dagger.Component
 import io.reactivex.Scheduler
 import javax.inject.Singleton
@@ -30,6 +31,8 @@ interface AppComponent {
 	fun exposePreferences(): SettingsRepository
 
 	fun exposeSystemManager(): SystemManager
+
+	fun exposeFirebaseAnalytics(): FirebaseAnalytics
 
 	fun inject(app: App)
 	fun inject(notifService: DownloadLatestComicService)

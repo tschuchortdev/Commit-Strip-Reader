@@ -1,5 +1,6 @@
 package com.tschuchort.readerforcommitstrip.feed
 
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.tschuchort.readerforcommitstrip.*
 import dagger.Module
 import dagger.Provides
@@ -14,6 +15,7 @@ class FeedModule {
 						 @UiScheduler uiScheduler: Scheduler,
 						 @ComputationScheduler compScheduler: Scheduler,
 						 @IoScheduler ioScheduler: Scheduler,
-						 systemManager: SystemManager): FeedContract.Presenter
-			= FeedPresenter(repository, uiScheduler, compScheduler, ioScheduler, systemManager)
+						 systemManager: SystemManager,
+						 analytics: FirebaseAnalytics): FeedContract.Presenter
+			= FeedPresenter(repository, uiScheduler, compScheduler, ioScheduler, systemManager, analytics)
 }

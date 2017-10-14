@@ -1,5 +1,6 @@
 package com.tschuchort.readerforcommitstrip.feed
 
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.tschuchort.readerforcommitstrip.*
 import com.tschuchort.readerforcommitstrip.feed.FeedContract.*
 import io.reactivex.Observable
@@ -10,11 +11,12 @@ import javax.inject.Inject
 @PerActivity
 class FeedPresenter
 		@Inject constructor(
-				val comicRepository: ComicRepository,
+				private val comicRepository: ComicRepository,
 				@UiScheduler uiScheduler: Scheduler,
 				@ComputationScheduler compScheduler: Scheduler,
 				@IoScheduler val ioScheduler: Scheduler,
-				systemManager: SystemManager)
+				systemManager: SystemManager,
+				private val analytics: FirebaseAnalytics)
 		: Presenter(uiScheduler, compScheduler) {
 
 	override val initialState = State.Refreshing(emptyList(), Orientation.VERTICAL, true)
@@ -50,6 +52,11 @@ class FeedPresenter
 					.subscribeOn(ioScheduler)
 					.distinctUntilChanged()
 					.map(Event::NetworkStatusChanged))!!
+
+	override fun logEvent(event: Event) {
+		super.logEvent(event)
+		analytics.logEvent(event.javaClass.simpleName, null)
+	}
 
 	override fun reduce(oldState: State, event: Event) = when (event) {
 		is Event.OrientationChanged -> Pair(

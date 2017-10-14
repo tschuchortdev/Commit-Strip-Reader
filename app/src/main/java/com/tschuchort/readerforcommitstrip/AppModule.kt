@@ -11,6 +11,7 @@ import com.f2prateek.rx.preferences2.RxSharedPreferences
 import com.firebase.jobdispatcher.FirebaseJobDispatcher
 import com.firebase.jobdispatcher.GooglePlayDriver
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
+import com.google.firebase.analytics.FirebaseAnalytics
 import dagger.Module
 import dagger.Provides
 import io.reactivex.Scheduler
@@ -82,6 +83,10 @@ open class AppModule(val app: Application) {
 		override val isInternetConnected
 				= ReactiveNetwork.checkInternetConnectivity()
 	}
+
+	@Provides
+	@Singleton
+	fun provideAnalytics(@AppContext ctx: Context) = FirebaseAnalytics.getInstance(ctx)
 }
 
 @Qualifier
