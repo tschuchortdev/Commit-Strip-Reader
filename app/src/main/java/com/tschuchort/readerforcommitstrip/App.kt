@@ -10,6 +10,8 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.support.multidex.MultiDexApplication
 import android.support.v4.app.NotificationCompat
+import com.akaita.java.rxjava2debug.RxJava2Debug
+import com.facebook.stetho.Stetho
 import com.google.firebase.crash.FirebaseCrash
 import com.squareup.leakcanary.LeakCanary
 import com.tschuchort.readerforcommitstrip.zoom.ZoomActivity
@@ -54,6 +56,8 @@ class App : MultiDexApplication() {
 
 		LeakCanary.install(this)
 
+		Stetho.initializeWithDefaults(this)
+
 		if(BuildConfig.DEBUG) {
 			FirebaseCrash.setCrashCollectionEnabled(false)
 			Timber.plant(Timber.DebugTree())
@@ -62,6 +66,9 @@ class App : MultiDexApplication() {
 			FirebaseCrash.setCrashCollectionEnabled(true)
 			Timber.plant(FirebaseCrashReportTree())
 		}
+
+		//this has to be done AFTER initializing crash reporting (firebase, crashlytics etc)
+		RxJava2Debug.enableRxJava2AssemblyTracking(arrayOf("com.tschuchort.readerforcommitstrip"))
 
 		// start or stop notification service when settings change
 		settings.notifyAboutNewComics.observe().subscribe { notifySetting ->

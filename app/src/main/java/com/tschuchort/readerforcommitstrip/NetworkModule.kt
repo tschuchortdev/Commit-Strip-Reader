@@ -1,6 +1,6 @@
 package com.tschuchort.readerforcommitstrip
 
-import com.squareup.moshi.JsonQualifier
+import com.facebook.stetho.okhttp3.StethoInterceptor
 import dagger.Module
 import dagger.Provides
 import okhttp3.OkHttpClient
@@ -17,7 +17,9 @@ open class NetworkModule {
 
 	@Provides
 	@Singleton
-	fun provideHttpClient() = OkHttpClient.Builder().build()!!
+	fun provideHttpClient() = OkHttpClient.Builder()
+			.addNetworkInterceptor(StethoInterceptor())
+			.build()!!
 
 	@Provides
 	@Singleton
