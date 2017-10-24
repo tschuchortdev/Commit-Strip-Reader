@@ -43,10 +43,11 @@ class FeedPresenter
 						else
 							comicRepository.getNewestComics()
 						)
+
+								.map<Event>(Event::DataRefreshed)
+								.onErrorReturn { Event.RefreshFailed }
 								.subscribeOn(ioScheduler)
 								.retryDelayed(delay = 1000, times = 5)
-								.map<Event>(Event::DataRefreshed)
-								.onErrorReturn(Event.RefreshFailed)
 					},
 			systemManager.observeInternetConnectivity()
 					.subscribeOn(ioScheduler)

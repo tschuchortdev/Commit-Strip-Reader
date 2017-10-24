@@ -118,11 +118,11 @@ class ComicRepositoryImpl
 
 	override fun getComicsBefore(firstComic: Comic): Single<List<Comic>> =
 			Observable.range(0, Int.MAX_VALUE)
-					.flatMap { getComicsForPage(it).toObservable() }
-					.scan { accumulatedList, newList -> accumulatedList + newList }
+					.concatMap { getComicsForPage(it).toObservable() }
 					// retry until we have found the page that contained the last downloaded comic
 					.takeUntil { comics -> comics.contains(firstComic) }
-					.lastOrError()
+					.reduce { accumulatedList, newList -> accumulatedList + newList }
+					.toSingle()
 					.map { comics -> comics.takeWhile { it != firstComic }}
 
 	private fun getComicsForPage(page: Int)
