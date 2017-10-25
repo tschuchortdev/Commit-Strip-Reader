@@ -54,11 +54,12 @@ class App : MultiDexApplication() {
 
 		component.inject(this)
 
-		LeakCanary.install(this)
-
-		Stetho.initializeWithDefaults(this)
 
 		if(BuildConfig.DEBUG) {
+			Stetho.initializeWithDefaults(this)
+
+			LeakCanary.install(this)
+
 			FirebaseCrash.setCrashCollectionEnabled(false)
 			Timber.plant(Timber.DebugTree())
 		}
