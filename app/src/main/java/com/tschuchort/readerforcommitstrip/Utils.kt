@@ -1,12 +1,18 @@
 package com.tschuchort.readerforcommitstrip
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.ACTION_SEND
+import android.content.pm.LabeledIntent
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Point
+import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.support.v4.app.NavUtils
 import android.support.v4.app.TaskStackBuilder
 import android.support.v7.widget.GridLayoutManager
@@ -18,16 +24,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import com.bumptech.glide.GenericRequestBuilder
-import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import de.mrapp.android.bottomsheet.BottomSheet
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
-import io.reactivex.Single
+import java.io.File
+import java.io.FileOutputStream
 import java.lang.Exception
 import java.lang.UnsupportedOperationException
-import java.util.concurrent.CancellationException
-import java.util.concurrent.TimeUnit
+import java.util.*
 
 fun <T> Iterable<T>.dropUntilAfter(predicate: (T) -> Boolean) = dropWhile { !predicate(it) }.drop(1)
 
@@ -68,6 +73,8 @@ fun View.setPaddingRight(right: Int) = setPadding(paddingLeft, paddingTop, right
 fun View.setPaddingEnd(end: Int) = setPaddingRelative(paddingStart, paddingTop, end, paddingBottom)
 fun View.setPaddingTop(top: Int) = setPaddingRelative(paddingStart, top, paddingEnd, paddingBottom)
 fun View.setPaddingBottom(bottom: Int) = setPaddingRelative(paddingStart, paddingTop, paddingEnd, bottom)
+fun View.setPaddingVertical(vertical: Int) = setPaddingRelative(paddingStart, vertical, paddingEnd, vertical)
+fun View.setPaddingHorizontal(horizontal: Int) = setPaddingRelative(horizontal, paddingTop, horizontal, paddingBottom)
 
 var View.marginLeft: Int
 	get() = (layoutParams as? ViewGroup.MarginLayoutParams)?.leftMargin ?: 0
@@ -191,56 +198,104 @@ fun Activity.shareText(text: String, callToAction: String? = null) {
 		putExtra(Intent.EXTRA_TEXT, text)
 	}
 
+	shareIntent(this, sendIntent, callToAction)
+}
+
+@SuppressLint("SetWorldReadable")
+fun Activity.shareImage(image: Bitmap, text: String? = null, callToAction: String? = null) {
+	val file = File(
+			applicationContext.cacheDir,
+			"shared_image${Random().nextInt()}.png")
+
+    val fOut = FileOutputStream(file)
+    image.compress(Bitmap.CompressFormat.PNG, 100, fOut)
+    fOut.flush()
+    fOut.close()
+
+    file.setReadable(true, false)
+
+	val sendIntent = Intent().apply {
+		action = Intent.ACTION_SEND
+		type = "image/*"
+		putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file))
+
+		if(text != null)
+			putExtra(Intent.EXTRA_TEXT, text)
+	}
+
+	shareIntent(this, sendIntent, callToAction)
+}
+
+fun shareIntent(activity: Activity, intent: Intent, callToAction: String? = null) {
 	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-		startActivity(
+		activity.startActivity(
 				if(callToAction != null)
-					Intent.createChooser(sendIntent, callToAction)
+					Intent.createChooser(intent, callToAction)
 				else
-					sendIntent)
+					intent)
 	}
 	else {
-		BottomSheet.Builder(this)
+		BottomSheet.Builder(activity)
 				.setTitle(callToAction)
-				.setIntent(this, sendIntent)
+				.setIntent(activity, intent)
 				.show()
 	}
 }
 
-fun loadBitmap(ctx: Context, imageUrl: String,
-			   timeout: Long = 0, timeUnit: TimeUnit = TimeUnit.SECONDS)
-		= Single.create<Bitmap> { emitter ->
+fun saveImageToGallery(context: Context, image: Bitmap, name: String,
+					   folderName: String, description: String? = null, quality: Int = 100) {
+	val storageDir = File(
+    	Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+    	folderName)
 
-	val target = Glide.with(ctx)
-			.load(imageUrl)
-			.asBitmap()
-			.into(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+	// may throw IOException, but no idea how to sensibly handle this here
+	val imageFile = File(storageDir.absolutePath + name)
+	imageFile.createNewFile()
+	val ostream = FileOutputStream(imageFile)
+	image.compress(Bitmap.CompressFormat.JPEG, quality, ostream)
+	ostream.close()
 
-	emitter.setCancellable {
-		val cancelledSucessfully = target.cancel(true)
+	makeImageAvailableToGallery(context, imageFile.absolutePath)
+}
 
-		if(!cancelledSucessfully && !target.isDone)
-			emitter.onError(CancellationFailure("failed to cancel bitmap loading"))
-	}
+/**
+ * sends a broadcast so other apps like the gallery can find the saved image
+ */
+fun makeImageAvailableToGallery(context: Context, savedImagePath: String) {
+	val mediaScanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+	val imageFile = File(savedImagePath)
+	val contentUri = Uri.fromFile(imageFile)
+	mediaScanIntent.data = contentUri
+	context.sendBroadcast(mediaScanIntent)
+}
 
-	try {
-		val bitmap =
-				if (timeout > 0)
-					target.get(timeout, timeUnit)
-				else
-					target.get()
+/**
+ * gets the native share bottom sheet intent and adds own intent to it
+ */
+fun getNativeShareIntent(context: Context, sendIntent: Intent): Intent {
+  	val pm = context.packageManager
 
-		emitter.onSuccess(bitmap)
-	}
-	catch (e: CancellationException) {
-		// loading was succesfully cancelled, do nothing
-	}
-	catch (e: Throwable) {
-		emitter.onError(e)
-	}
-}!!
+  	val intentList = pm.queryIntentActivities (sendIntent, 0)
+			.map {
+				val packageName = it.activityInfo.packageName
 
-class CancellationFailure(msg: String): Throwable(msg)
+				val intent = Intent().apply {
+					component = ComponentName(packageName, it.activityInfo.name)
+					`package` = packageName
+					action = ACTION_SEND
+					putExtras(sendIntent.extras)
+					type = sendIntent.type
+				}
 
+				LabeledIntent(intent, packageName, it.loadLabel(pm), it.iconResource)
+			}
+			.toMutableList()
+
+  	val chooserIntent = Intent.createChooser(intentList.removeAt(0), "Share")
+
+	chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, intentList.toTypedArray())
+  	return chooserIntent
+}
 
 fun Activity.navigateUp() {
 	val upIntent = NavUtils.getParentActivityIntent(this)

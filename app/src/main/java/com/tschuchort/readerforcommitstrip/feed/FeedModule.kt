@@ -1,7 +1,10 @@
 package com.tschuchort.readerforcommitstrip.feed
 
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.tschuchort.readerforcommitstrip.*
+import com.tschuchort.readerforcommitstrip.ComicRepository
+import com.tschuchort.readerforcommitstrip.PerActivity
+import com.tschuchort.readerforcommitstrip.SystemManager
+import com.tschuchort.readerforcommitstrip.UiScheduler
 import dagger.Module
 import dagger.Provides
 import io.reactivex.Scheduler
@@ -13,9 +16,7 @@ class FeedModule {
 	@PerActivity
 	fun providePresenter(repository: ComicRepository,
 						 @UiScheduler uiScheduler: Scheduler,
-						 @ComputationScheduler compScheduler: Scheduler,
-						 @IoScheduler ioScheduler: Scheduler,
 						 systemManager: SystemManager,
 						 analytics: FirebaseAnalytics): FeedContract.Presenter
-			= FeedPresenter(repository, uiScheduler, compScheduler, ioScheduler, systemManager, analytics)
+			= FeedPresenter(repository, uiScheduler, systemManager, analytics)
 }

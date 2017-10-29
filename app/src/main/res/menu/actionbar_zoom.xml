@@ -6,6 +6,6 @@
     <item
         android:id="@+id/action_share"
         android:title="@string/action_share_commitstrip"
-        android:icon="@drawable/ic_toolbar_share"
+        android:icon="@drawable/ic_share"
         app:showAsAction="always" />
 </menu>

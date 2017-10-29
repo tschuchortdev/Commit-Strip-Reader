@@ -3,9 +3,12 @@ package com.tschuchort.readerforcommitstrip.feed
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.tschuchort.readerforcommitstrip.*
 import com.tschuchort.readerforcommitstrip.feed.FeedContract.*
+import com.tschuchort.readerforcommitstrip.feed.FeedContract.Orientation.HORIZONTAL
+import com.tschuchort.readerforcommitstrip.feed.FeedContract.Orientation.VERTICAL
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.rxkotlin.ofType
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 @PerActivity
@@ -13,17 +16,25 @@ class FeedPresenter
 		@Inject constructor(
 				private val comicRepository: ComicRepository,
 				@UiScheduler uiScheduler: Scheduler,
-				@ComputationScheduler compScheduler: Scheduler,
-				@IoScheduler val ioScheduler: Scheduler,
 				systemManager: SystemManager,
 				private val analytics: FirebaseAnalytics)
-		: Presenter(uiScheduler, compScheduler) {
+		: Presenter(uiScheduler) {
 
-	override val initialState = State.Refreshing(emptyList(), Orientation.VERTICAL, true)
+	private val ioScheduler = Schedulers.io()
+
+	override val initialState = State(
+			comics = emptyList(),
+			feedOrientation = VERTICAL,
+			internetConnected = true,
+			selectedComic = null,
+			loading = false,
+			refreshing = true
+	)
 
 	override val initCommand = Command.RefreshNewest()
 
-	override val events = Observable.merge(
+	override val events = Observable.mergeArray(
+
 			sideEffects.ofType<Command.LoadMore>()
 					.dropMapSingle { (lastComic, lastIndex) ->
 						(if(lastComic != null)
@@ -34,8 +45,9 @@ class FeedPresenter
 								.subscribeOn(ioScheduler)
 								.retryDelayed(delay = 1000, times = 5)
 								.map<Event>(Event::ComicsLoaded)
-								.onErrorReturn(Event.LoadingFailed)
+								.onErrorReturn(Event::LoadingFailed)
 					},
+
 			sideEffects.ofType<Command.RefreshNewest>()
 					.switchMapSingle { (newestComic) ->
 						(if(newestComic != null)
@@ -43,16 +55,25 @@ class FeedPresenter
 						else
 							comicRepository.getNewestComics()
 						)
-
-								.map<Event>(Event::DataRefreshed)
-								.onErrorReturn { Event.RefreshFailed }
 								.subscribeOn(ioScheduler)
 								.retryDelayed(delay = 1000, times = 5)
+								.map<Event>(Event::DataRefreshed)
+								.onErrorReturn(Event::RefreshFailed)
 					},
+
 			systemManager.observeInternetConnectivity()
 					.subscribeOn(ioScheduler)
 					.distinctUntilChanged()
-					.map(Event::NetworkStatusChanged))!!
+					.map(Event::NetworkStatusChanged),
+
+			sideEffects.ofType<Command.DownloadImageForSharing>()
+					.flatMapSingle { cmd ->
+						comicRepository.loadBitmap(cmd.url)
+								.subscribeOn(ioScheduler)
+								.map { bmp -> Pair(bmp, cmd.title) }
+					}
+					.map { (bmp, title) -> Event.ImageDownloaded(bmp, title) }
+	)!!
 
 	override fun logEvent(event: Event) {
 		super.logEvent(event)
@@ -61,43 +82,47 @@ class FeedPresenter
 
 	override fun reduce(oldState: State, event: Event) = when (event) {
 		is Event.OrientationChanged -> Pair(
-				State.Default(
-						comics = oldState.comics,
+				oldState.copy(
 						feedOrientation =
-								if (oldState.feedOrientation == Orientation.VERTICAL)
-									Orientation.HORIZONTAL
+								if (oldState.feedOrientation == VERTICAL)
+									HORIZONTAL
 								else
-									Orientation.VERTICAL,
-						internetConnected = oldState.internetConnected),
+									VERTICAL
+				),
 				null)
 
 		is Event.Refresh            -> Pair(
-				State.Refreshing(oldState.comics, oldState.feedOrientation, oldState.internetConnected),
+				oldState.copy(refreshing = true),
 				Command.RefreshNewest(oldState.comics.firstOrNull()))
 
 		is Event.DataRefreshed      -> Pair(
-				State.Default((event.latestComics + oldState.comics), oldState.feedOrientation, oldState.internetConnected),
+				oldState.copy(
+						comics = event.latestComics + oldState.comics,
+						refreshing = false
+				),
 				Command.ScrollToTop)
 
 		is Event.RefreshFailed      -> Pair(
-				State.Default(oldState.comics, oldState.feedOrientation, oldState.internetConnected),
+				oldState.copy(refreshing = false),
 				Command.ShowLoadingFailed)
 
 		is Event.EndReached         ->
-			if(oldState is State.LoadingMore)
-				Pair(oldState, null)
+			if(oldState.loading)
+				Pair(oldState, null) // do nothing essentially
 			else
 				Pair(
-					State.LoadingMore(oldState.comics, oldState.feedOrientation, oldState.internetConnected),
+					oldState.copy(loading = true),
 					Command.LoadMore(oldState.comics.lastOrNull(), oldState.comics.lastIndex))
 
-		is Event.LoadingFailed      ->
-			Pair(State.Default(oldState.comics, oldState.feedOrientation, oldState.internetConnected), Command.ShowLoadingFailed)
+		is Event.LoadingFailed      -> Pair(oldState.copy(loading = false), Command.ShowLoadingFailed)
 
 		is Event.ComicsLoaded       ->
 			if(event.newComics.isNotEmpty())
-				Pair(State.Default(
-						(oldState.comics + event.newComics), oldState.feedOrientation, oldState.internetConnected),
+				Pair(
+						oldState.copy(
+								comics = oldState.comics + event.newComics,
+								loading = false
+						),
 						null)
 			else
 				Pair(oldState, Command.ShowNoMoreComics)
@@ -106,10 +131,27 @@ class FeedPresenter
 
 		is Event.ComicClicked       -> Pair(oldState, Command.ShowEnlarged(event.selectedComic))
 
-		is Event.ComicLongClicked   -> Pair(oldState, Command.Share(event.selectedComic))
+		is Event.ComicLongClicked   -> Pair(oldState.copy(selectedComic = event.selectedComic), null)
 
-		is Event.NetworkStatusChanged -> Pair(
-				oldState.apply { internetConnected = event.connected },
-				null)
+		is Event.NetworkStatusChanged -> Pair(oldState.copy(internetConnected = event.connected), null)
+
+		is Event.ImageDownloaded -> Pair(oldState, Command.Share(event.image, event.title))
+
+		is Event.FailedToDownloadImage -> Pair(oldState, Command.ShowFailedToShare)
+
+		is Event.DialogCanceled -> Pair(oldState.copy(selectedComic = null), null)
+
+		is Event.SaveClicked -> {
+			val comic = oldState.selectedComic!!
+
+			Pair(oldState.copy(selectedComic = null), Command.SaveComic(comic))
+		}
+
+		is Event.ShareClicked -> {
+			val url = oldState.selectedComic!!.imageUrl
+			val title = oldState.selectedComic!!.title
+
+			Pair(oldState.copy(selectedComic = null), Command.DownloadImageForSharing(url, title))
+		}
 	}
 }

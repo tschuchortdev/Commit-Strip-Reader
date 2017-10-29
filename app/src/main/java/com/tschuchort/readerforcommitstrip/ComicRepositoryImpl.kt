@@ -1,8 +1,12 @@
 package com.tschuchort.readerforcommitstrip
 
+import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
+import android.graphics.Bitmap
 import android.webkit.URLUtil.isValidUrl
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.Target
 import com.firebase.jobdispatcher.*
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -12,12 +16,15 @@ import io.reactivex.rxkotlin.zipWith
 import io.reactivex.schedulers.Schedulers
 import retrofit2.HttpException
 import timber.log.Timber
+import java.util.concurrent.CancellationException
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ComicRepositoryImpl
-		@Inject constructor(private val prefs: SharedPreferences,
+		@Inject constructor(@AppContext private val ctx: Context,
+							private val prefs: SharedPreferences,
 							private val res: Resources,
 							jobDispatcher: FirebaseJobDispatcher,
 							private val webService: CommitStripWebService)
@@ -41,7 +48,6 @@ class ComicRepositoryImpl
 				.build()
 
 	private val latestComicCallbacks = ArrayList<(Comic) -> Completable>()
-
 
 	init {
 		jobDispatcher.mustSchedule(latestComicDownloadJob)
@@ -83,6 +89,40 @@ class ComicRepositoryImpl
 		    return Completable.complete()
 		}
 	}
+
+	override fun loadBitmap(imageUrl: String, timeout: Long, timeUnit: TimeUnit)
+			= Single.create<Bitmap> { emitter ->
+
+		val target = Glide.with(ctx)
+				.load(imageUrl)
+				.asBitmap()
+				.into(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+
+		emitter.setCancellable {
+			val cancelledSucessfully = target.cancel(true)
+
+			if(!cancelledSucessfully && !target.isDone)
+				emitter.onError(CancellationFailure("failed to cancel bitmap loading"))
+		}
+
+		try {
+			val bitmap =
+					if (timeout > 0)
+						target.get(timeout, timeUnit)
+					else
+						target.get()
+
+			emitter.onSuccess(bitmap)
+		}
+		catch (e: CancellationException) {
+			// loading was succesfully cancelled, do nothing
+		}
+		catch (e: Throwable) {
+			emitter.onError(e)
+		}
+	}!!
+
+	class CancellationFailure(msg: String): Throwable(msg)
 
 	override fun getNewestComic() = getNewestComics().map(List<Comic>::first)!!
 

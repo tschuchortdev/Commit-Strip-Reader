@@ -3,6 +3,7 @@ package com.tschuchort.readerforcommitstrip.feed
 import android.content.Intent
 import android.os.Bundle
 import android.support.annotation.StringRes
+import android.support.design.widget.BottomSheetDialog
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.app.AppCompatActivity
@@ -12,11 +13,13 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import com.airbnb.epoxy.SimpleEpoxyController
 import com.jakewharton.rxbinding2.support.v4.widget.RxSwipeRefreshLayout
 import com.jakewharton.rxbinding2.view.RxMenuItem
+import com.jakewharton.rxbinding2.view.RxView
 import com.jakewharton.rxrelay2.PublishRelay
 import com.tschuchort.readerforcommitstrip.*
 import com.tschuchort.readerforcommitstrip.feed.FeedContract.*
@@ -36,9 +39,13 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 	private val swipeRefreshLayout: SwipeRefreshLayout by bindView(R.id.swipe_refresh_layout)
 	private val noInternetWarningView: TextView by bindView(R.id.no_internet_warning)
 	private val feedController = SimpleEpoxyController()
+	private lateinit var dialog: BottomSheetDialog
+	private val shareButton by lazy { dialog.findViewById<LinearLayout>(R.id.bottomsheet_share)!! }
+	private val saveButton by lazy { dialog.findViewById<LinearLayout>(R.id.bottomsheet_save)!! }
 
-	private val comicClicks = PublishRelay.create<Comic>()
-	private val comicLongClicks = PublishRelay.create<Comic>()
+	private val comicClickRelay = PublishRelay.create<Comic>()
+	private val comicLongClickRelay = PublishRelay.create<Comic>()
+	private val dialogCanceledRelay = PublishRelay.create<Unit>()
 
 	val component by lazy {
 		DaggerFeedComponent.builder()
@@ -69,6 +76,12 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 		feedRecycler.adapter = feedController.adapter
 		feedRecycler.itemAnimator = DefaultItemAnimator()
         feedRecycler.setHasFixedSize(true)
+
+		dialog = BottomSheetDialog(this)
+		val dialogView = layoutInflater.inflate(R.layout.download_share_dialog_sheet, null)
+		dialog.setContentView(dialogView)
+
+		dialog.setOnCancelListener { dialogCanceledRelay.accept(Unit) }
 
 		if(savedInstanceState != null) {
 			feedController.onRestoreInstanceState(savedInstanceState)
@@ -110,7 +123,7 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 
 		noInternetWarningView.visibility = if(state.internetConnected) GONE else VISIBLE
 
-		swipeRefreshLayout.isRefreshing = state is State.Refreshing
+		swipeRefreshLayout.isRefreshing = state.refreshing
 
 		feedController.setModels(
 				state.comics
@@ -118,15 +131,20 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 							if(state.feedOrientation == Orientation.VERTICAL)
 								ComicItem(
 										comic = it,
-										onClick = comicClicks::accept,
-										onLongClick = comicLongClicks::accept)
+										onClick = comicClickRelay::accept,
+										onLongClick = comicLongClickRelay::accept)
 							else
 								ScrollableComicItem(
 										comic = it,
-										onClick = comicClicks::accept,
-										onLongClick = comicLongClicks::accept)
+										onClick = comicClickRelay::accept,
+										onLongClick = comicLongClickRelay::accept)
 						}
-						.addIf(state is State.LoadingMore, LoadingSpinnerItem()))
+						.addIf(state.loading, LoadingSpinnerItem()))
+
+		if(state.selectedComic != null)
+			dialog.show()
+		else
+			dialog.hide()
 	}
 
 	override fun doSideEffect(command: Command) {
@@ -135,21 +153,29 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 				Toast.makeText(this, getString(R.string.toast_failed_to_load_comics), Toast.LENGTH_SHORT)
 						.show()
 
-			is Command.ShowNoMoreComics ->
+			is Command.ShowNoMoreComics  ->
 				Toast.makeText(this, getString(R.string.toast_no_more_comics_to_load), Toast.LENGTH_SHORT)
 						.show()
 
-			is Command.ShowEnlarged -> {
+			is Command.ShowEnlarged      -> {
 				startActivity(Intent(this, ZoomActivity::class.java).apply {
 					putExtra(getString(R.string.extra_selected_comic), command.selectedComic)
 				})
 			}
 
-			is Command.Share -> shareText(command.selectedComic.link, getString(R.string.share_call_to_action))
+			is Command.ShowFailedToSave ->
+				Toast.makeText(this, getString(R.string.toast_failed_to_save_comic), Toast.LENGTH_SHORT)
+					.show()
 
-			is Command.ScrollToTop -> feedRecycler.smoothScrollToPosition(0)
+			is Command.Share             -> shareImage(command.image, command.title, getString(R.string.share_call_to_action))
 
-			is Command.StartSettings -> startActivity(Intent(this, SettingsActivity::class.java))
+			is Command.ShowFailedToShare ->
+				Toast.makeText(this, getString(R.string.toast_failed_to_share), Toast.LENGTH_SHORT)
+					.show()
+
+			is Command.ScrollToTop       -> feedRecycler.smoothScrollToPosition(0)
+
+			is Command.StartSettings     -> startActivity(Intent(this, SettingsActivity::class.java))
 		}
 	}
 
@@ -164,9 +190,15 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 						.map { Event.EndReached },
 				RxSwipeRefreshLayout.refreshes(swipeRefreshLayout)
 						.map { Event.Refresh },
-				comicClicks
+				comicClickRelay
 						.map(Event::ComicClicked),
-				comicLongClicks
-						.map(Event::ComicLongClicked))!!
+				comicLongClickRelay
+						.map(Event::ComicLongClicked),
+				dialogCanceledRelay
+						.map { Event.DialogCanceled },
+				RxView.clicks(saveButton)
+						.map { Event.SaveClicked },
+				RxView.clicks(shareButton)
+						.map { Event.ShareClicked })!!
 	}
 }

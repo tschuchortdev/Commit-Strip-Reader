@@ -9,6 +9,7 @@ import io.mironov.smuggler.AutoParcelable
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 import java.io.Serializable
 
@@ -18,8 +19,7 @@ interface Contract {
 	interface Command : Serializable
 
 	abstract class Presenter<S : State, E : Event, in V : View<S,E,C>, C : Command>(
-			protected val uiScheduler: Scheduler,
-			protected val compScheduler: Scheduler) {
+			protected val uiScheduler: Scheduler) {
 
 		companion object {
 			private const val BUNDLE_KEY = "presenter last state"
@@ -72,8 +72,8 @@ interface Contract {
 		@CallSuper
 		@MainThread
 		open fun onSaveInstanceState(outBundle: Bundle?) {
-			outBundle!!.putParcelable(BUNDLE_KEY, stateRelay.value
-												  ?: throw IllegalStateException("stateRelay relay is empty"))
+			outBundle!!.putParcelable(BUNDLE_KEY,
+					stateRelay.value ?: throw IllegalStateException("stateRelay relay is empty"))
 		}
 
 		@CallSuper
@@ -135,7 +135,7 @@ interface Contract {
 				// so we don't get activity memory leaks
 				// instead everyone subscribes to the respective relay
 				backgroundStreamDisposable = Observable.merge(viewEvents, this.events)
-						.observeOn(compScheduler)
+						.observeOn(Schedulers.computation())
 						.doOnNext(this::logEvent)
 						.map { event -> reduce(stateRelay.value!!, event) }
 						.observeOn(uiScheduler) // VERY IMPORTANT! stateRelay.accept() needs to be called on UI thread always!

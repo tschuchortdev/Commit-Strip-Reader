@@ -2,7 +2,6 @@ package com.tschuchort.readerforcommitstrip.zoom
 
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.tschuchort.readerforcommitstrip.Comic
-import com.tschuchort.readerforcommitstrip.ComputationScheduler
 import com.tschuchort.readerforcommitstrip.PerActivity
 import com.tschuchort.readerforcommitstrip.UiScheduler
 import com.tschuchort.readerforcommitstrip.zoom.ZoomContract.*
@@ -13,9 +12,8 @@ import javax.inject.Inject
 class ZoomPresenter
 	@Inject constructor(comic: Comic,
 						@UiScheduler uiScheduler: Scheduler,
-						@ComputationScheduler compScheduler: Scheduler,
 						private val analytics: FirebaseAnalytics)
-		: ZoomContract.Presenter(uiScheduler, compScheduler) {
+		: ZoomContract.Presenter(uiScheduler) {
 
 	override val initialState = State(comic)
 

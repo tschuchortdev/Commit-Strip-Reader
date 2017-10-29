@@ -18,8 +18,8 @@ interface ZoomContract : Contract {
 		object NavigateUp : Command()
 	}
 
-	abstract class Presenter(uiScheduler: Scheduler, compScheduler: Scheduler)
-		: Contract.Presenter<State, Event, View, Command>(uiScheduler, compScheduler)
+	abstract class Presenter(uiScheduler: Scheduler)
+		: Contract.Presenter<State, Event, View, Command>(uiScheduler)
 
 	interface View : Contract.View<State, Event, Command>
 }

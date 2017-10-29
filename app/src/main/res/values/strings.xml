@@ -21,4 +21,6 @@
     <string name="notification_title_new_comic">New Commitstrip uploaded</string>
     <string name="notif_channel_title_new_comics">New CommitStrips</string>
     <string name="action_share_commitstrip">Share CommitStrip</string>
+    <string name="toast_failed_to_share">failed to share image</string>
+    <string name="toast_failed_to_save_comic">failed to save comic</string>
 </resources>

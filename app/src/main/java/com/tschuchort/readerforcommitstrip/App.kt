@@ -96,7 +96,7 @@ class App : MultiDexApplication() {
 	}
 
 	private fun sendNewComicNotification(comic: Comic): Completable =
-		loadBitmap(this, comic.imageUrl)
+		comicRepo.loadBitmap(comic.imageUrl)
 				.retryDelayed(10, TimeUnit.SECONDS, 6)
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
