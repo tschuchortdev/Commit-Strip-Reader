@@ -149,13 +149,9 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 
 	override fun doSideEffect(command: Command) {
 		when(command) {
-			is Command.ShowLoadingFailed ->
-				Toast.makeText(this, getString(R.string.toast_failed_to_load_comics), Toast.LENGTH_SHORT)
-						.show()
+			is Command.ShowLoadingFailed -> toast(getString(R.string.toast_failed_to_load_comics))
 
-			is Command.ShowNoMoreComics  ->
-				Toast.makeText(this, getString(R.string.toast_no_more_comics_to_load), Toast.LENGTH_SHORT)
-						.show()
+			is Command.ShowNoMoreComics  -> toast(getString(R.string.toast_no_more_comics_to_load))
 
 			is Command.ShowEnlarged      -> {
 				startActivity(Intent(this, ZoomActivity::class.java).apply {
@@ -163,21 +159,19 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 				})
 			}
 
-			is Command.ShowFailedToSave ->
-				Toast.makeText(this, getString(R.string.toast_failed_to_save_comic), Toast.LENGTH_SHORT)
-					.show()
+			is Command.ShowFailedToSave  -> toast(getString(R.string.toast_failed_to_save_comic))
 
 			is Command.Share             -> shareImage(command.image, command.title, getString(R.string.share_call_to_action))
 
-			is Command.ShowFailedToShare ->
-				Toast.makeText(this, getString(R.string.toast_failed_to_share), Toast.LENGTH_SHORT)
-					.show()
+			is Command.ShowFailedToShare -> toast(getString(R.string.toast_failed_to_share))
 
 			is Command.ScrollToTop       -> feedRecycler.smoothScrollToPosition(0)
 
 			is Command.StartSettings     -> startActivity(Intent(this, SettingsActivity::class.java))
 		}
 	}
+
+	private fun toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
 
 	override val events by lazy {
 		Observable.mergeArray(
