@@ -1,6 +1,5 @@
 package com.tschuchort.readerforcommitstrip.feed
 
-import android.content.Intent
 import android.os.Bundle
 import android.support.annotation.StringRes
 import android.support.design.widget.BottomSheetDialog
@@ -11,6 +10,7 @@ import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
+import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.LinearLayout
@@ -23,8 +23,6 @@ import com.jakewharton.rxbinding2.view.RxView
 import com.jakewharton.rxrelay2.PublishRelay
 import com.tschuchort.readerforcommitstrip.*
 import com.tschuchort.readerforcommitstrip.feed.FeedContract.*
-import com.tschuchort.readerforcommitstrip.settings.SettingsActivity
-import com.tschuchort.readerforcommitstrip.zoom.ZoomActivity
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import io.reactivex.Observable
 import kotterknife.bindView
@@ -50,11 +48,12 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 	val component by lazy {
 		DaggerFeedComponent.builder()
 				.appComponent((application as App).component)
+				.activityModule(ActivityModule(this))
 				.build()!!
 	}
 
 	@Inject
-	lateinit var presenter: Presenter
+	lateinit var presenter: FeedContract.Presenter
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -77,9 +76,9 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 		feedRecycler.itemAnimator = DefaultItemAnimator()
         feedRecycler.setHasFixedSize(true)
 
-		dialog = BottomSheetDialog(this)
-		val dialogView = layoutInflater.inflate(R.layout.download_share_dialog_sheet, null)
-		dialog.setContentView(dialogView)
+		dialog = createBottomSheet(
+                layoutInflater.inflate(R.layout.download_share_dialog_sheet, null)
+        )
 
 		dialog.setOnCancelListener { dialogCanceledRelay.accept(Unit) }
 
@@ -153,12 +152,6 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 
 			is Command.ShowNoMoreComics  -> toast(getString(R.string.toast_no_more_comics_to_load))
 
-			is Command.ShowEnlarged      -> {
-				startActivity(Intent(this, ZoomActivity::class.java).apply {
-					putExtra(getString(R.string.extra_selected_comic), command.selectedComic)
-				})
-			}
-
 			is Command.ShowFailedToSave  -> toast(getString(R.string.toast_failed_to_save_comic))
 
 			is Command.Share             -> shareImage(command.image, command.title, getString(R.string.share_call_to_action))
@@ -166,8 +159,6 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 			is Command.ShowFailedToShare -> toast(getString(R.string.toast_failed_to_share))
 
 			is Command.ScrollToTop       -> feedRecycler.smoothScrollToPosition(0)
-
-			is Command.StartSettings     -> startActivity(Intent(this, SettingsActivity::class.java))
 		}
 	}
 
@@ -195,4 +186,10 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 				RxView.clicks(shareButton)
 						.map { Event.ShareClicked })!!
 	}
+
+    private fun createBottomSheet(contentView: View): BottomSheetDialog {
+        val sheet = BottomSheetDialog(this)
+        sheet.setContentView(contentView)
+        return sheet
+    }
 }

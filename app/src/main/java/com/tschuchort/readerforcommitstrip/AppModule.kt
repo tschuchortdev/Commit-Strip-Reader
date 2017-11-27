@@ -86,7 +86,7 @@ open class AppModule(val app: Application) {
 
 	@Provides
 	@Singleton
-	fun provideAnalytics(@AppContext ctx: Context) = FirebaseAnalytics.getInstance(ctx)
+	fun provideAnalytics(@AppContext ctx: Context) = FirebaseAnalytics.getInstance(ctx)!!
 }
 
 @Qualifier

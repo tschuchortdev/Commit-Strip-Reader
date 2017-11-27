@@ -13,8 +13,6 @@ import android.graphics.Point
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.support.v4.app.NavUtils
-import android.support.v4.app.TaskStackBuilder
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -297,20 +295,8 @@ fun getNativeShareIntent(context: Context, sendIntent: Intent): Intent {
   	return chooserIntent
 }
 
-fun Activity.navigateUp() {
-	val upIntent = NavUtils.getParentActivityIntent(this)
-
-	// if this task is the root, the parent cant be in the back stack anymore, so we need to
-	// recreate it anyway. Otherwise it will just navigate back to the home screen
-	if (NavUtils.shouldUpRecreateTask(this, upIntent) || isTaskRoot) {
-		TaskStackBuilder.create(this).addNextIntentWithParentStack(upIntent).startActivities()
-	}
-	// parent activity still exists in back stack, so we set flags to navigate and restore state
-	else {
-		upIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-		NavUtils.navigateUpTo(this, upIntent)
-	}
-}
+inline fun <reified Target : Activity> Context.makeIntent()
+		= Intent(this, Target::class.java)
 
 fun <A, B, C, D> GenericRequestBuilder<A, B, C, D>.progressView(progressView: View) =
 	listener(object : RequestListener<A,D> {

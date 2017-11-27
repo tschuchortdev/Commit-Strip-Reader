@@ -28,6 +28,7 @@ class ZoomActivity : AppCompatActivity(), ZoomContract.View {
 		DaggerZoomComponent.builder()
 				.appComponent((application as App).component)
 				.zoomModule(ZoomModule(selectedComic))
+				.activityModule(ActivityModule(this))
 				.build()!!
 	}
 
@@ -79,8 +80,7 @@ class ZoomActivity : AppCompatActivity(), ZoomContract.View {
 
 	override fun doSideEffect(command: Command) {
 		when(command) {
-			is Command.Share      -> shareText(command.comic.link, getString(R.string.share_call_to_action))
-			is Command.NavigateUp -> navigateUp()
+			is Command.Share -> shareText(command.comic.link, getString(R.string.share_call_to_action))
 		}
 	}
 

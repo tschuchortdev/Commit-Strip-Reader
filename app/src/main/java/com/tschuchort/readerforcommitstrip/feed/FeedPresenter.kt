@@ -17,6 +17,7 @@ class FeedPresenter
 				private val comicRepository: ComicRepository,
 				@UiScheduler uiScheduler: Scheduler,
 				systemManager: SystemManager,
+				navigator: Navigator,
 				private val analytics: FirebaseAnalytics)
 		: Presenter(uiScheduler) {
 
@@ -32,6 +33,14 @@ class FeedPresenter
 	)
 
 	override val initCommand = Command.RefreshNewest()
+
+	init {
+		sideEffects.ofType<Command.ShowEnlarged>()
+				.subscribe { navigator.showZoomedScreen(it.selectedComic) }
+
+		sideEffects.ofType<Command.StartSettings>()
+				.subscribe { navigator.showSettings() }
+	}
 
 	override val events = Observable.mergeArray(
 
