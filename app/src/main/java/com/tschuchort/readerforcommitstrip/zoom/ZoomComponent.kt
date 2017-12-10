@@ -1,16 +1,12 @@
 package com.tschuchort.readerforcommitstrip.zoom
 
 import com.tschuchort.readerforcommitstrip.ActivityModule
-import com.tschuchort.readerforcommitstrip.AppComponent
 import com.tschuchort.readerforcommitstrip.PerActivity
-import dagger.Component
-
+import dagger.Subcomponent
 
 @PerActivity
-@Component(
-		modules = arrayOf(ZoomModule::class, ActivityModule::class),
-		dependencies = arrayOf(AppComponent::class))
-interface ZoomComponent : AppComponent {
+@Subcomponent(modules = [ZoomModule::class, ActivityModule::class])
+interface ZoomComponent {
 	fun exposePresenter(): ZoomContract.Presenter
 
 	fun inject(activity: ZoomActivity)

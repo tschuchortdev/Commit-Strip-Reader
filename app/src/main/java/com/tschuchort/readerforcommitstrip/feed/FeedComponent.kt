@@ -1,15 +1,12 @@
 package com.tschuchort.readerforcommitstrip.feed
 
 import com.tschuchort.readerforcommitstrip.ActivityModule
-import com.tschuchort.readerforcommitstrip.AppComponent
 import com.tschuchort.readerforcommitstrip.PerActivity
-import dagger.Component
+import dagger.Subcomponent
 
 @PerActivity
-@Component(
-		modules = arrayOf(FeedModule::class, ActivityModule::class),
-		dependencies = arrayOf(AppComponent::class))
-interface FeedComponent : AppComponent {
+@Subcomponent(modules = [FeedModule::class, ActivityModule::class])
+interface FeedComponent {
 	fun exposePresenter(): FeedContract.Presenter
 
 	fun inject(activity: FeedActivity)

@@ -25,11 +25,10 @@ class ZoomActivity : AppCompatActivity(), ZoomContract.View {
 	val component by lazy {
 		val selectedComic: Comic = intent!!.getParcelableExtra(getString(R.string.extra_selected_comic))!!
 
-		DaggerZoomComponent.builder()
-				.appComponent((application as App).component)
-				.zoomModule(ZoomModule(selectedComic))
-				.activityModule(ActivityModule(this))
-				.build()!!
+		(application as App).component.newZoomComponent(
+				ActivityModule(this),
+				ZoomModule(selectedComic)
+		)
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {

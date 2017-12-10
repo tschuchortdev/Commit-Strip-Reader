@@ -5,18 +5,19 @@ import android.app.NotificationManager
 import android.content.res.Resources
 import com.firebase.jobdispatcher.FirebaseJobDispatcher
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.tschuchort.readerforcommitstrip.feed.FeedComponent
+import com.tschuchort.readerforcommitstrip.zoom.ZoomComponent
+import com.tschuchort.readerforcommitstrip.zoom.ZoomModule
 import dagger.Component
 import io.reactivex.Scheduler
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = arrayOf(AppModule::class, NetworkModule::class))
+@Component(modules = [AppModule::class, NetworkModule::class])
 interface AppComponent {
 
 	@AppContext fun exposeAppContext(): Application
 	fun exposeResources(): Resources
-
-	fun exposeWebService(): CommitStripWebService
 
 	fun exposeComicRepo(): ComicRepository
 
@@ -33,6 +34,9 @@ interface AppComponent {
 	fun exposeSystemManager(): SystemManager
 
 	fun exposeFirebaseAnalytics(): FirebaseAnalytics
+
+	fun newFeedComponent(activityModule: ActivityModule): FeedComponent
+	fun newZoomComponent(activityModule: ActivityModule, zoomModule: ZoomModule): ZoomComponent
 
 	fun inject(app: App)
 	fun inject(notifService: DownloadLatestComicService)

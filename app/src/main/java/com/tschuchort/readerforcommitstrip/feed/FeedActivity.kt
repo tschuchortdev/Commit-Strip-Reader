@@ -46,10 +46,7 @@ open class FeedActivity : AppCompatActivity(), FeedContract.View {
 	private val dialogCanceledRelay = PublishRelay.create<Unit>()
 
 	val component by lazy {
-		DaggerFeedComponent.builder()
-				.appComponent((application as App).component)
-				.activityModule(ActivityModule(this))
-				.build()!!
+		(application as App).component.newFeedComponent(ActivityModule(this))
 	}
 
 	@Inject

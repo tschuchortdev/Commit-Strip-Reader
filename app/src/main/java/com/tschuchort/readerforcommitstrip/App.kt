@@ -1,5 +1,6 @@
 package com.tschuchort.readerforcommitstrip
 
+import android.annotation.TargetApi
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -39,8 +40,8 @@ class App : MultiDexApplication() {
 
 	val component by lazy {
 		DaggerAppComponent.builder()
-			.appModule(AppModule(this))
-			.build()!!
+				.appModule(AppModule(this))
+				.build()!!
 	}
 
 	override fun onCreate() {
@@ -53,7 +54,6 @@ class App : MultiDexApplication() {
 		}
 
 		component.inject(this)
-
 
 		if(BuildConfig.DEBUG) {
 			Stetho.initializeWithDefaults(this)
@@ -79,9 +79,11 @@ class App : MultiDexApplication() {
 				newComicsSubscription?.dispose()
 		}
 
+		@TargetApi(Build.VERSION_CODES.O)
 		// create a NotificationChannel if we are on Oreo
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			val notifChannel = NotificationChannel("default_notification_channel",
+			val notifChannel = NotificationChannel(
+					"default_notification_channel",
 					getString(R.string.notif_channel_title_new_comics),
 					NotificationManager.IMPORTANCE_LOW)
 

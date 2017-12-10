@@ -158,7 +158,7 @@ class FeedPresenter
 
 		is Event.ShareClicked -> {
 			val url = oldState.selectedComic!!.imageUrl
-			val title = oldState.selectedComic!!.title
+			val title = oldState.selectedComic.title
 
 			Pair(oldState.copy(selectedComic = null), Command.DownloadImageForSharing(url, title))
 		}
