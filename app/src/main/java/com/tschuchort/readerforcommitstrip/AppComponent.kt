@@ -6,6 +6,7 @@ import android.content.res.Resources
 import com.firebase.jobdispatcher.FirebaseJobDispatcher
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.tschuchort.readerforcommitstrip.feed.FeedComponent
+import com.tschuchort.readerforcommitstrip.feed.FeedModule
 import com.tschuchort.readerforcommitstrip.zoom.ZoomComponent
 import com.tschuchort.readerforcommitstrip.zoom.ZoomModule
 import dagger.Component
@@ -35,7 +36,7 @@ interface AppComponent {
 
 	fun exposeFirebaseAnalytics(): FirebaseAnalytics
 
-	fun newFeedComponent(activityModule: ActivityModule): FeedComponent
+	fun newFeedComponent(activityModule: ActivityModule, feedModule: FeedModule = FeedModule()): FeedComponent
 	fun newZoomComponent(activityModule: ActivityModule, zoomModule: ZoomModule): ZoomComponent
 
 	fun inject(app: App)

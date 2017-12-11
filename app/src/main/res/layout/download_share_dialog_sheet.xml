@@ -30,7 +30,7 @@
             android:layout_marginLeft="32dp"
             android:textSize="16sp"
             android:textColor="@color/text_default"
-            android:text="Save"/>
+            android:text="@string/dialog_option_save"/>
 
     </LinearLayout>
 
@@ -57,7 +57,7 @@
             android:layout_marginLeft="32dp"
             android:textSize="16sp"
             android:textColor="@color/text_default"
-            android:text="Share"/>
+            android:text="@string/dialog_option_share"/>
 
     </LinearLayout>
 

@@ -29,7 +29,7 @@ import kotterknife.bindView
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-open class FeedActivity : AppCompatActivity(), FeedContract.View {
+class FeedActivity : AppCompatActivity(), FeedContract.View {
 	private val actionBar: Toolbar by bindView(R.id.action_bar)
 	private val feedOrientationMenuItem by lazy { actionBar.menu.findItem(R.id.action_display_style) }
 	private val settingsMenuItem by lazy { actionBar.menu.findItem(R.id.action_settings) }

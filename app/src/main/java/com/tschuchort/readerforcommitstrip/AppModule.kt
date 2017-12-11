@@ -24,8 +24,9 @@ import javax.inject.Singleton
 /**
  * provides app wide dependencies
  */
+@AllOpen
 @Module
-open class AppModule(val app: Application) {
+class AppModule(val app: Application) {
 
 	@Provides
 	@Singleton
@@ -71,8 +72,8 @@ open class AppModule(val app: Application) {
 
 	@Provides
 	@Singleton
-	fun provideSettings(@AppContext ctx: Context, rxPrefs: RxSharedPreferences, res: Resources): SettingsRepository
-			= SettingsRepositoryImpl(ctx, rxPrefs, res)
+	fun provideSettings(settingsRepositoryImpl: SettingsRepositoryImpl): SettingsRepository
+			= settingsRepositoryImpl
 
 	@Provides
 	@Singleton

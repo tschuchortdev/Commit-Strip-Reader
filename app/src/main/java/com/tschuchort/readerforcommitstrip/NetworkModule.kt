@@ -12,8 +12,9 @@ import retrofit2.converter.simplexml.SimpleXmlConverterFactory
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
+@AllOpen
 @Module
-open class NetworkModule {
+class NetworkModule {
 
 	@Provides
 	@Singleton
@@ -54,3 +55,4 @@ annotation class XmlConverter
 @Qualifier
 @Retention(AnnotationRetention.RUNTIME)
 annotation class JsonConverter
+

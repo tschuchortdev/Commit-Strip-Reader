@@ -28,9 +28,12 @@ import de.mrapp.android.bottomsheet.BottomSheet
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import java.io.File
 import java.io.FileOutputStream
+import java.io.Serializable
 import java.lang.Exception
 import java.lang.UnsupportedOperationException
 import java.util.*
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 
 fun <T> Iterable<T>.dropUntilAfter(predicate: (T) -> Boolean) = dropWhile { !predicate(it) }.drop(1)
 
@@ -241,7 +244,7 @@ fun shareIntent(activity: Activity, intent: Intent, callToAction: String? = null
 }
 
 fun saveImageToGallery(context: Context, image: Bitmap, name: String,
-					   folderName: String, description: String? = null, quality: Int = 100) {
+					   folderName: String, quality: Int = 100) {
 	val storageDir = File(
     	Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
     	folderName)
@@ -311,3 +314,83 @@ fun <A, B, C, D> GenericRequestBuilder<A, B, C, D>.progressView(progressView: Vi
 		}
 	})
 
+enum class MutableLazyThreadSafetyMode { SYNCHRONIZED, NONE }
+
+fun <T> mutableLazy(
+			mode: MutableLazyThreadSafetyMode = MutableLazyThreadSafetyMode.SYNCHRONIZED,
+			initialize: () -> T)
+		: ReadWriteProperty<Any?, T>
+		= when(mode) {
+			MutableLazyThreadSafetyMode.SYNCHRONIZED -> SynchronizedMutableLazy(initialize)
+			MutableLazyThreadSafetyMode.NONE -> UnsafeMutableLazy(initialize)
+		}
+
+fun <T> mutableLazy(lock: Any?, initialize: () -> T)
+		: ReadWriteProperty<Any?, T>
+		= SynchronizedMutableLazy(initialize, lock)
+
+private object UNINITIALIZED_VALUE
+
+private class SynchronizedMutableLazy<T>(private val initialize: () -> T, lock: Any? = null)
+	: ReadWriteProperty<Any?, T>, Serializable {
+
+	@Volatile
+	private var value: Any? = UNINITIALIZED_VALUE
+
+	private val lock = lock ?: this
+
+	override fun getValue(thisRef: Any?, property: KProperty<*>): T {
+		synchronized(lock) {
+			if (!isInitialized()) {
+				value = initialize()
+			}
+
+			@Suppress("UNCHECKED_CAST")
+			return value as T
+		}
+	}
+
+	override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+		synchronized(lock) {
+			this.value = value
+		}
+	}
+
+	override fun toString(): String =
+			if (isInitialized()) value.toString()
+			else "Lazy value not initialized yet."
+
+	@Suppress("NOTHING_TO_INLINE")
+	inline fun isInitialized() = (value !== UNINITIALIZED_VALUE)
+}
+
+private class UnsafeMutableLazy<T>(private val initialize: () -> T)
+	: ReadWriteProperty<Any?, T>, Serializable {
+
+	@Volatile
+	private var value: Any? = UNINITIALIZED_VALUE
+
+	override fun getValue(thisRef: Any?, property: KProperty<*>): T {
+		synchronized(this) {
+			if (!isInitialized()) {
+				value = initialize()
+			}
+
+			@Suppress("UNCHECKED_CAST")
+			return value as T
+		}
+	}
+
+	override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+		synchronized(this) {
+			this.value = value
+		}
+	}
+
+	override fun toString(): String =
+			if (isInitialized()) value.toString()
+			else "Lazy value not initialized yet."
+
+	@Suppress("NOTHING_TO_INLINE")
+	inline fun isInitialized() = (value !== UNINITIALIZED_VALUE)
+}

@@ -6,8 +6,12 @@ import android.support.v4.app.NavUtils
 import android.support.v4.app.TaskStackBuilder
 import com.tschuchort.readerforcommitstrip.settings.SettingsActivity
 import com.tschuchort.readerforcommitstrip.zoom.ZoomActivity
+import javax.inject.Inject
 
-class NavigatorImpl(private val sourceActivity: Activity) : Navigator {
+@PerActivity
+class NavigatorImpl
+	@Inject constructor(private val sourceActivity: Activity) : Navigator {
+
 	override fun showSettings() =
 			sourceActivity.startActivity(
 					sourceActivity.makeIntent<SettingsActivity>(), null)

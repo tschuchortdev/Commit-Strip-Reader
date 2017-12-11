@@ -23,4 +23,6 @@
     <string name="action_share_commitstrip">Share CommitStrip</string>
     <string name="toast_failed_to_share">failed to share image</string>
     <string name="toast_failed_to_save_comic">failed to save comic</string>
+	<string name="dialog_option_save">Save</string>
+    <string name="dialog_option_share">Share</string>
 </resources>

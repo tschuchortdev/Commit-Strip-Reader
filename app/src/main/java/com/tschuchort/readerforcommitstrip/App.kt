@@ -38,7 +38,7 @@ class App : MultiDexApplication() {
 
 	private var newComicsSubscription: Disposable? = null
 
-	val component by lazy {
+	var component by mutableLazy {
 		DaggerAppComponent.builder()
 				.appModule(AppModule(this))
 				.build()!!
@@ -54,6 +54,7 @@ class App : MultiDexApplication() {
 		}
 
 		component.inject(this)
+
 
 		if(BuildConfig.DEBUG) {
 			Stetho.initializeWithDefaults(this)
