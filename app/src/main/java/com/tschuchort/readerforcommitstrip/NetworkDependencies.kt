@@ -16,25 +16,20 @@ import javax.inject.Singleton
 @Module
 class NetworkModule {
 
-	@Provides
-	@Singleton
+	@Provides @Singleton
 	fun provideHttpClient() = OkHttpClient.Builder()
 			.addNetworkInterceptor(StethoInterceptor())
 			.build()!!
 
-	@Provides
-	@Singleton
-	@XmlConverter
-	fun provideXmlConverter(): Converter.Factory = SimpleXmlConverterFactory.create()
+	@Provides @Singleton
+	@XmlConverter fun provideXmlConverter(): Converter.Factory = SimpleXmlConverterFactory.create()
 
-	@Provides
-	@Singleton
-	@JsonConverter
-	fun provideJsonConverter(): Converter.Factory = MoshiConverterFactory.create()
+	@Provides @Singleton
+	@JsonConverter fun provideJsonConverter(): Converter.Factory = MoshiConverterFactory.create()
 
-	@Provides
-	@Singleton
-	fun provideWebService(httpClient: OkHttpClient, @XmlConverter xmlConverter: Converter.Factory): CommitStripWebService
+	@Provides @Singleton
+	fun provideWebService(httpClient: OkHttpClient, @XmlConverter xmlConverter: Converter.Factory)
+			: CommitStripWebService
 			= Retrofit.Builder()
 			.client(httpClient)
 			.addCallAdapterFactory(RxJava2CallAdapterFactory.create())
@@ -43,8 +38,7 @@ class NetworkModule {
 			.build()
 			.create(CommitStripWebService::class.java)
 
-	@Provides
-	@Singleton
+	@Provides @Singleton
 	fun provideComicRepository(repo: ComicRepositoryImpl): ComicRepository = repo
 }
 

@@ -19,7 +19,12 @@ interface ZoomContract : Contract {
 	}
 
 	abstract class Presenter(uiScheduler: Scheduler)
-		: Contract.Presenter<State, Event, View, Command>(uiScheduler)
+		: Contract.Presenter<State, Event, View, Command>(uiScheduler) {
+
+		interface Factory {
+			fun create(selectedComic: Comic): Presenter
+		}
+	}
 
 	interface View : Contract.View<State, Event, Command>
 }

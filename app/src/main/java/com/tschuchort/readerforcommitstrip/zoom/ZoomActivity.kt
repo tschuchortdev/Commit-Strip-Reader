@@ -19,16 +19,16 @@ class ZoomActivity : AppCompatActivity(), ZoomContract.View {
 	private val photoView: PhotoView by bindView(R.id.photo_view)
 	private val actionBar: Toolbar by bindView(R.id.action_bar)
 
+	private lateinit var presenter: Presenter
+
+	private val component by lazy {
+		(application as App).component.newActivityComponent(ActivityModule(this))
+	}
+
 	@Inject
-	protected lateinit var presenter: ZoomContract.Presenter
-
-	val component by lazy {
+	protected fun setPresenter(presenterFactory: Presenter.Factory) {
 		val selectedComic: Comic = intent!!.getParcelableExtra(getString(R.string.extra_selected_comic))!!
-
-		(application as App).component.newZoomComponent(
-				ActivityModule(this),
-				ZoomModule(selectedComic)
-		)
+		presenter = presenterFactory.create(selectedComic)
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {

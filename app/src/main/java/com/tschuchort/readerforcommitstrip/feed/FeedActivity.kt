@@ -45,12 +45,12 @@ class FeedActivity : AppCompatActivity(), FeedContract.View {
 	private val comicLongClickRelay = PublishRelay.create<Comic>()
 	private val dialogCanceledRelay = PublishRelay.create<Unit>()
 
-	val component by lazy {
-		(application as App).component.newFeedComponent(ActivityModule(this))
+	private val component by lazy {
+		(application as App).component.newActivityComponent(ActivityModule(this))
 	}
 
 	@Inject
-	lateinit var presenter: FeedContract.Presenter
+	protected lateinit var presenter: FeedContract.Presenter
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
