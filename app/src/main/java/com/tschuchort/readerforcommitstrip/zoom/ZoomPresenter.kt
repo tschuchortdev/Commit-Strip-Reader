@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 @PerActivity
 class ZoomPresenter
-	@Inject constructor(comic: Comic,
+	@Inject constructor(val comic: Comic,
 						@UiScheduler uiScheduler: Scheduler,
 						private val navigator: Navigator,
 						private val analytics: FirebaseAnalytics)

@@ -28,9 +28,8 @@ interface Contract {
 		private val viewDisposables = ArrayList<Disposable>()
 		private var backgroundStreamDisposable: Disposable? = null
 		private val viewEvents = PublishRelay.create<E>()
-		private val stateRelay by lazy { BehaviorRelay.createDefault(initialState)!! }
+		private val stateRelay = BehaviorRelay.create<S>()
 		private val commandRelay by lazy { PublishRelay.create<C>()!! }
-
 
 		private var restoredState = false
 		private var attachedForFirstTime = true
@@ -54,6 +53,22 @@ interface Contract {
 		 */
 		protected abstract val initialState: S
 
+		/**
+		 * function that restores the state after the process has died completely
+		 *
+		 * this can be useful to reset flags for loading, refeshing and so on,
+		 * depending on a background task running in the presenter to toggle them, which
+		 * died with the process
+		 *
+		 * since the presenter is retained through config changes, restoring the state
+		 * won't be neccessary then
+		 */
+		protected open fun restoreState(savedState: S): S = savedState
+
+		/**
+		 * command that will be executed once to start an initial side effect
+		 * like loading
+		 */
 		protected open val initCommand: C? = null
 
 		/**
@@ -79,10 +94,10 @@ interface Contract {
 		@CallSuper
 		@MainThread
 		open fun onRestoreInstanceState(savedInstanceBundle: Bundle?) {
-			val lastState = savedInstanceBundle?.getParcelable<S>(BUNDLE_KEY)
+			val savedState = savedInstanceBundle?.getParcelable<S>(BUNDLE_KEY)
 
-			if(lastState != null) {
-				stateRelay.accept(lastState)
+			if(savedState != null && attachedForFirstTime) {
+				stateRelay.accept(restoreState(savedState))
 				restoredState = true
 			}
 		}
@@ -122,6 +137,12 @@ interface Contract {
 			if(attachedForFirstTime) {
 				// again build stream bottom up so no emissions get lost
 
+				// state has to be initialized before the backgroundStream is
+				// started, or stateRealy.value is not available when some event
+				// in the presenter immediately upon subscribtion
+				if(!restoredState)
+					stateRelay.accept(initialState)
+
                 // log state updates
                 stateRelay
                         .distinctUntilChanged()
@@ -146,12 +167,12 @@ interface Contract {
 								commandRelay.accept(cmd)
 						}
 
+				// command has to be send after the backgroundStream is setup
 				if(!restoredState && initCommand != null)
 					commandRelay.accept(initCommand!!)
 
 				attachedForFirstTime = false
 			}
-
 
 			viewIsAttached = true
 		}

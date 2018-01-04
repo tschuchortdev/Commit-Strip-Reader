@@ -32,6 +32,11 @@ class FeedPresenter
 			refreshing = true
 	)
 
+	override fun restoreState(savedState: State) = savedState.copy(
+			loading = false,
+			refreshing = false
+	)
+
 	override val initCommand = Command.RefreshNewest()
 
 	init {
