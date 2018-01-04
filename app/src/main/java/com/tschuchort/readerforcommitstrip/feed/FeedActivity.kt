@@ -27,7 +27,6 @@ import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import io.reactivex.Observable
 import kotterknife.bindView
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 
 class FeedActivity : AppCompatActivity(), FeedContract.View {
 	private val actionBar: Toolbar by bindView(R.id.action_bar)
@@ -49,8 +48,7 @@ class FeedActivity : AppCompatActivity(), FeedContract.View {
 		(application as App).component.newActivityComponent(ActivityModule(this))
 	}
 
-	@Inject
-	protected lateinit var presenter: FeedContract.Presenter
+	private val presenter by retained { component.exposeFeedPresenter() }
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -91,8 +89,8 @@ class FeedActivity : AppCompatActivity(), FeedContract.View {
     }
 
 	override fun onStop() {
-		super.onStop()
 		presenter.detachView(isFinishing)
+		super.onStop()
 	}
 
 	override fun onSaveInstanceState(outState: Bundle?) {

@@ -19,16 +19,16 @@ class ZoomActivity : AppCompatActivity(), ZoomContract.View {
 	private val photoView: PhotoView by bindView(R.id.photo_view)
 	private val actionBar: Toolbar by bindView(R.id.action_bar)
 
-	private lateinit var presenter: Presenter
-
 	private val component by lazy {
 		(application as App).component.newActivityComponent(ActivityModule(this))
 	}
 
 	@Inject
-	protected fun setPresenter(presenterFactory: Presenter.Factory) {
+	protected lateinit var presenterFactory: Presenter.Factory
+
+	private val presenter by retained {
 		val selectedComic: Comic = intent!!.getParcelableExtra(getString(R.string.extra_selected_comic))!!
-		presenter = presenterFactory.create(selectedComic)
+		presenterFactory.create(selectedComic)
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,8 +57,8 @@ class ZoomActivity : AppCompatActivity(), ZoomContract.View {
 	}
 
 	override fun onStop() {
-		super.onStop()
 		presenter.detachView(isFinishing)
+		super.onStop()
 	}
 
 	override fun onSaveInstanceState(outState: Bundle?) {
