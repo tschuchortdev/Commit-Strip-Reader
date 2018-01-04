@@ -371,20 +371,16 @@ private class UnsafeMutableLazy<T>(private val initialize: () -> T)
 	private var value: Any? = UNINITIALIZED_VALUE
 
 	override fun getValue(thisRef: Any?, property: KProperty<*>): T {
-		synchronized(this) {
-			if (!isInitialized()) {
-				value = initialize()
-			}
-
-			@Suppress("UNCHECKED_CAST")
-			return value as T
+		if (!isInitialized()) {
+			value = initialize()
 		}
+
+		@Suppress("UNCHECKED_CAST")
+		return value as T
 	}
 
 	override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
-		synchronized(this) {
-			this.value = value
-		}
+		this.value = value
 	}
 
 	override fun toString(): String =
