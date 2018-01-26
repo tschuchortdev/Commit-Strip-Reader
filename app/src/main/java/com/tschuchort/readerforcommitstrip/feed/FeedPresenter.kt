@@ -37,19 +37,19 @@ class FeedPresenter
 			refreshing = false
 	)
 
-	override val initCommand = Command.RefreshNewest()
+	override val initCommand = SideEffect.RefreshNewest()
 
 	init {
-		sideEffects.ofType<Command.ShowEnlarged>()
+		sideEffects.ofType<SideEffect.ShowEnlarged>()
 				.subscribe { navigator.showZoomedScreen(it.selectedComic) }
 
-		sideEffects.ofType<Command.StartSettings>()
+		sideEffects.ofType<SideEffect.StartSettings>()
 				.subscribe { navigator.showSettings() }
 	}
 
 	override val events = Observable.mergeArray(
 
-			sideEffects.ofType<Command.LoadMore>()
+			sideEffects.ofType<SideEffect.LoadMore>()
 					.dropMapSingle { (lastComic, lastIndex) ->
 						(if(lastComic != null)
 							comicRepository.getComicsAfter(lastComic, lastIndex)
@@ -62,7 +62,7 @@ class FeedPresenter
 								.onErrorReturn(Event::LoadingFailed)
 					},
 
-			sideEffects.ofType<Command.RefreshNewest>()
+			sideEffects.ofType<SideEffect.RefreshNewest>()
 					.switchMapSingle { (newestComic) ->
 						(if(newestComic != null)
 							comicRepository.getComicsBefore(newestComic)
@@ -80,7 +80,7 @@ class FeedPresenter
 					.distinctUntilChanged()
 					.map(Event::NetworkStatusChanged),
 
-			sideEffects.ofType<Command.DownloadImageForSharing>()
+			sideEffects.ofType<SideEffect.DownloadImageForSharing>()
 					.flatMapSingle { cmd ->
 						comicRepository.loadBitmap(cmd.url)
 								.subscribeOn(ioScheduler)
@@ -95,77 +95,77 @@ class FeedPresenter
 	}
 
 	override fun reduce(oldState: State, event: Event) = when (event) {
-		is Event.OrientationChanged -> Pair(
+		is Event.OrientationChanged -> StateUpdate(
 				oldState.copy(
 						feedOrientation =
 								if (oldState.feedOrientation == VERTICAL)
 									HORIZONTAL
 								else
 									VERTICAL
-				),
-				null)
+				)
+		)
 
-		is Event.Refresh            -> Pair(
+		is Event.Refresh            -> StateUpdate(
 				oldState.copy(refreshing = true),
-				Command.RefreshNewest(oldState.comics.firstOrNull()))
+				SideEffect.RefreshNewest(oldState.comics.firstOrNull()))
 
-		is Event.DataRefreshed      -> Pair(
+		is Event.DataRefreshed   -> StateUpdate(
 				oldState.copy(
 						comics = event.latestComics + oldState.comics,
 						refreshing = false
 				),
-				Command.ScrollToTop)
+				ViewEffect.ScrollToTop)
 
-		is Event.RefreshFailed      -> Pair(
+		is Event.RefreshFailed   -> StateUpdate(
 				oldState.copy(refreshing = false),
-				Command.ShowLoadingFailed)
+				ViewEffect.ShowLoadingFailed)
 
 		is Event.EndReached         ->
 			if(oldState.loading)
-				Pair(oldState, null) // do nothing essentially
+				StateUpdate(oldState) // do nothing essentially
 			else
-				Pair(
-					oldState.copy(loading = true),
-					Command.LoadMore(oldState.comics.lastOrNull(), oldState.comics.lastIndex))
+				StateUpdate(
+						oldState.copy(loading = true),
+						SideEffect.LoadMore(oldState.comics.lastOrNull(), oldState.comics.lastIndex))
 
-		is Event.LoadingFailed      -> Pair(oldState.copy(loading = false), Command.ShowLoadingFailed)
+		is Event.LoadingFailed   -> StateUpdate(oldState.copy(loading = false), ViewEffect.ShowLoadingFailed)
 
-		is Event.ComicsLoaded       ->
+		is Event.ComicsLoaded    ->
 			if(event.newComics.isNotEmpty())
-				Pair(
+				StateUpdate(
 						oldState.copy(
 								comics = oldState.comics + event.newComics,
 								loading = false
-						),
-						null)
+						)
+				)
 			else
-				Pair(oldState, Command.ShowNoMoreComics)
+				StateUpdate(oldState, ViewEffect.ShowNoMoreComics)
 
-		is Event.SettingsClicked    -> Pair(oldState, Command.StartSettings)
+		is Event.SettingsClicked    -> StateUpdate(oldState, SideEffect.StartSettings)
 
-		is Event.ComicClicked       -> Pair(oldState, Command.ShowEnlarged(event.selectedComic))
+		is Event.ComicClicked       -> StateUpdate(oldState, SideEffect.ShowEnlarged(event.selectedComic))
 
-		is Event.ComicLongClicked   -> Pair(oldState.copy(selectedComic = event.selectedComic), null)
+		is Event.ComicLongClicked   -> StateUpdate(oldState.copy(selectedComic = event.selectedComic))
 
-		is Event.NetworkStatusChanged -> Pair(oldState.copy(internetConnected = event.connected), null)
+		is Event.NetworkStatusChanged -> StateUpdate(oldState.copy(internetConnected = event.connected))
 
-		is Event.ImageDownloaded -> Pair(oldState, Command.Share(event.image, event.title))
+		is Event.ImageDownloaded -> StateUpdate(oldState, ViewEffect.Share(event.image, event.title))
 
-		is Event.FailedToDownloadImage -> Pair(oldState, Command.ShowFailedToShare)
+		is Event.FailedToDownloadImage -> StateUpdate(oldState, ViewEffect.ShowFailedToShare)
 
-		is Event.DialogCanceled -> Pair(oldState.copy(selectedComic = null), null)
+		is Event.DialogCanceled -> StateUpdate(oldState.copy(selectedComic = null))
 
 		is Event.SaveClicked -> {
 			val comic = oldState.selectedComic!!
 
-			Pair(oldState.copy(selectedComic = null), Command.SaveComic(comic))
+			StateUpdate(oldState.copy(selectedComic = null), SideEffect.SaveComic(comic))
 		}
 
 		is Event.ShareClicked -> {
 			val url = oldState.selectedComic!!.imageUrl
 			val title = oldState.selectedComic.title
 
-			Pair(oldState.copy(selectedComic = null), Command.DownloadImageForSharing(url, title))
+			StateUpdate(oldState.copy(selectedComic = null), SideEffect.DownloadImageForSharing(url, title))
 		}
 	}
 }

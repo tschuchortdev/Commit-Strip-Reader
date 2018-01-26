@@ -77,10 +77,8 @@ class ZoomActivity : AppCompatActivity(), ZoomContract.View {
 				.into(photoView)
 	}
 
-	override fun doSideEffect(command: Command) {
-		when(command) {
-			is Command.Share -> shareText(command.comic.link, getString(R.string.share_call_to_action))
-		}
+	override fun doSideEffect(effect: ViewEffect) = when(effect) {
+		is ViewEffect.Share -> shareText(effect.comic.link, getString(R.string.share_call_to_action))
 	}
 
 	override val events by lazy {

@@ -21,7 +21,7 @@ class ZoomPresenter
 	override val initialState = State(comic)
 
 	init {
-		sideEffects.ofType<Command.NavigateUp>()
+		sideEffects.ofType<SideEffect.NavigateUp>()
 				.subscribe { navigator.navigateUp() }
 	}
 
@@ -31,7 +31,7 @@ class ZoomPresenter
 	}
 
 	override fun reduce(oldState: State, event: Event) = when(event) {
-		is Event.ShareClicked -> Pair(oldState, Command.Share(oldState.comic))
-		is Event.UpClicked -> Pair(oldState, Command.NavigateUp)
+		Event.ShareClicked -> StateUpdate(oldState, ViewEffect.Share(oldState.comic))
+		Event.UpClicked -> StateUpdate(oldState, SideEffect.NavigateUp)
 	}
 }

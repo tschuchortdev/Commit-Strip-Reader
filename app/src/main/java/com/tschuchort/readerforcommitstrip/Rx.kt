@@ -1,10 +1,15 @@
 package com.tschuchort.readerforcommitstrip
 
+import com.jakewharton.rxrelay2.PublishRelay
+import com.jakewharton.rxrelay2.Relay
 import io.reactivex.*
+import io.reactivex.Observable
+import io.reactivex.Observer
 import io.reactivex.rxkotlin.zipWith
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import org.reactivestreams.Publisher
+import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
@@ -205,4 +210,57 @@ class BehaviorObservable<T>(initialValue: T, source: Observable<T>) : Observable
 	}
 
 	val value: T get() = subject.value!!
+}
+
+/**
+ * a relay that saves all emissions in a queue when no one is subscribed
+ * then emits them again as soon as someone subscribes
+ */
+class QueueRelay<T>(
+		private val queueSize: Int = Int.MAX_VALUE,
+		private val overflowStrategy: OverflowStrategy = OverflowStrategy.ERROR) : Relay<T>() {
+
+	private val queue: Queue<T> = LinkedList()
+	private val relay = PublishRelay.create<T>()
+	private var isEmptyingQueue = false
+
+	init {
+		require(queueSize > 0)
+	}
+
+	override fun subscribeActual(observer: Observer<in T>) {
+		if(queue.isNotEmpty() && !isEmptyingQueue) {
+			isEmptyingQueue = true
+
+			for(item in queue.pollIterator()) {
+				observer.onNext(item)
+			}
+
+			isEmptyingQueue = false
+		}
+
+		relay.subscribe(observer)
+	}
+
+	override fun accept(value: T) {
+		require(value != null)
+
+		if(relay.hasObservers())
+			relay.accept(value)
+		else if(queue.size < queueSize) {
+			queue += value
+		}
+		else when(overflowStrategy) {
+			OverflowStrategy.ERROR -> throw RuntimeException("queue size exceeded")
+			OverflowStrategy.DROP_OLDEST -> {
+				queue.remove()
+				queue += value
+			}
+			OverflowStrategy.DROP_LATEST -> Unit
+		}
+	}
+
+	override fun hasObservers() = isEmptyingQueue || relay.hasObservers()
+
+	enum class OverflowStrategy { ERROR, DROP_LATEST, DROP_OLDEST }
 }

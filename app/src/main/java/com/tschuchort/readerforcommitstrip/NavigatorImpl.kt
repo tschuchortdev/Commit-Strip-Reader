@@ -6,6 +6,7 @@ import android.support.v4.app.NavUtils
 import android.support.v4.app.TaskStackBuilder
 import com.tschuchort.readerforcommitstrip.settings.SettingsActivity
 import com.tschuchort.readerforcommitstrip.zoom.ZoomActivity
+import java.lang.IllegalArgumentException
 import javax.inject.Inject
 
 @PerActivity
@@ -28,6 +29,8 @@ class NavigatorImpl
 
 fun Activity.navigateUp() {
 	val upIntent = NavUtils.getParentActivityIntent(this)
+			?: throw IllegalArgumentException("this activity has no parent activity intent, " +
+													  "and thus can't navigate up")
 
 	// if this task is the root, the parent cant be in the back stack anymore, so we need to
 	// recreate it anyway. Otherwise it will just navigate back to the home screen

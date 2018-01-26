@@ -1,6 +1,7 @@
 package com.tschuchort.readerforcommitstrip.feed
 
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import com.tschuchort.readerforcommitstrip.Comic
 import com.tschuchort.readerforcommitstrip.Contract
@@ -9,6 +10,7 @@ import io.reactivex.Scheduler
 interface FeedContract : Contract {
 	enum class Orientation { VERTICAL, HORIZONTAL }
 
+	@SuppressLint("ParcelCreator")
 	data class State(
 			val comics: List<Comic>,
 			val feedOrientation: Orientation,
@@ -37,23 +39,26 @@ interface FeedContract : Contract {
 		object DialogCanceled : Event()
 	}
 
-	sealed class Command : Contract.Command {
-		data class LoadMore(val lastComic: Comic? = null, val lastIndex: Int = 0) : Command()
-		data class RefreshNewest(val newestComic: Comic? = null) : Command()
-		data class ShowEnlarged(val selectedComic: Comic) : Command()
-		data class Share(val image: Bitmap, val title: String) : Command()
-		object StartSettings : Command()
-		object ShowLoadingFailed : Command()
-		object ShowNoMoreComics : Command()
-		object ScrollToTop : Command()
-		data class DownloadImageForSharing(val url: String, val title: String) : Command()
-		data class SaveComic(val comic: Comic) : Command()
-		object ShowFailedToShare : Command()
-		object ShowFailedToSave : Command()
+	sealed class SideEffect : Contract.SideEffect {
+		data class LoadMore(val lastComic: Comic? = null, val lastIndex: Int = 0) : SideEffect()
+		data class RefreshNewest(val newestComic: Comic? = null) : SideEffect()
+		data class DownloadImageForSharing(val url: String, val title: String) : SideEffect()
+		data class SaveComic(val comic: Comic) : SideEffect()
+		data class ShowEnlarged(val selectedComic: Comic) : SideEffect()
+		object StartSettings : SideEffect()
+	}
+
+	sealed class ViewEffect : Contract.ViewEffect {
+		data class Share(val image: Bitmap, val title: String) : ViewEffect()
+		object ShowLoadingFailed : ViewEffect()
+		object ShowNoMoreComics : ViewEffect()
+		object ScrollToTop : ViewEffect()
+		object ShowFailedToShare : ViewEffect()
+		object ShowFailedToSave : ViewEffect()
 	}
 
 	abstract class Presenter(uiScheduler: Scheduler)
-		: Contract.Presenter<State, Event, View, Command>(uiScheduler)
+		: Contract.Presenter<State, Event, View, SideEffect, ViewEffect>(uiScheduler)
 
-	interface View : Contract.View<State, Event, Command>
+	interface View : Contract.View<State, Event, ViewEffect>
 }

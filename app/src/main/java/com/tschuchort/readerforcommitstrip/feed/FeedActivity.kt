@@ -141,20 +141,18 @@ class FeedActivity : AppCompatActivity(), FeedContract.View {
 			dialog.hide()
 	}
 
-	override fun doSideEffect(command: Command) {
-		when(command) {
-			is Command.ShowLoadingFailed -> toast(getString(R.string.toast_failed_to_load_comics))
+	override fun doSideEffect(effect: ViewEffect) = when (effect) {
+		is ViewEffect.ShowLoadingFailed -> toast(getString(R.string.toast_failed_to_load_comics))
 
-			is Command.ShowNoMoreComics  -> toast(getString(R.string.toast_no_more_comics_to_load))
+		is ViewEffect.ShowNoMoreComics  -> toast(getString(R.string.toast_no_more_comics_to_load))
 
-			is Command.ShowFailedToSave  -> toast(getString(R.string.toast_failed_to_save_comic))
+		is ViewEffect.ShowFailedToSave  -> toast(getString(R.string.toast_failed_to_save_comic))
 
-			is Command.Share             -> shareImage(command.image, command.title, getString(R.string.share_call_to_action))
+		is ViewEffect.Share             -> shareImage(effect.image, effect.title, getString(R.string.share_call_to_action))
 
-			is Command.ShowFailedToShare -> toast(getString(R.string.toast_failed_to_share))
+		is ViewEffect.ShowFailedToShare -> toast(getString(R.string.toast_failed_to_share))
 
-			is Command.ScrollToTop       -> feedRecycler.smoothScrollToPosition(0)
-		}
+		is ViewEffect.ScrollToTop       -> feedRecycler.smoothScrollToPosition(0)
 	}
 
 	private fun toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_SHORT).show()

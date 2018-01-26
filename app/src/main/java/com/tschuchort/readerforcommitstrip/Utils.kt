@@ -390,3 +390,9 @@ private class UnsafeMutableLazy<T>(private val initialize: () -> T)
 	@Suppress("NOTHING_TO_INLINE")
 	inline fun isInitialized() = (value !== UNINITIALIZED_VALUE)
 }
+
+fun <T> Queue<T>.pollIterator() = object : Iterator<T> {
+	override fun hasNext() = (peek() != null)
+
+	override fun next() = poll()
+}
