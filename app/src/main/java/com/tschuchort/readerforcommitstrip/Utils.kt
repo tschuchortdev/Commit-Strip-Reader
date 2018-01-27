@@ -12,7 +12,6 @@ import android.graphics.Bitmap
 import android.graphics.Point
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -21,6 +20,7 @@ import android.util.DisplayMetrics
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.Toast
 import com.bumptech.glide.GenericRequestBuilder
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
@@ -243,33 +243,6 @@ fun shareIntent(activity: Activity, intent: Intent, callToAction: String? = null
 	}
 }
 
-fun saveImageToGallery(context: Context, image: Bitmap, name: String,
-					   folderName: String, quality: Int = 100) {
-	val storageDir = File(
-    	Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-    	folderName)
-
-	// may throw IOException, but no idea how to sensibly handle this here
-	val imageFile = File(storageDir.absolutePath + name)
-	imageFile.createNewFile()
-	val ostream = FileOutputStream(imageFile)
-	image.compress(Bitmap.CompressFormat.JPEG, quality, ostream)
-	ostream.close()
-
-	makeImageAvailableToGallery(context, imageFile.absolutePath)
-}
-
-/**
- * sends a broadcast so other apps like the gallery can find the saved image
- */
-fun makeImageAvailableToGallery(context: Context, savedImagePath: String) {
-	val mediaScanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
-	val imageFile = File(savedImagePath)
-	val contentUri = Uri.fromFile(imageFile)
-	mediaScanIntent.data = contentUri
-	context.sendBroadcast(mediaScanIntent)
-}
-
 /**
  * gets the native share bottom sheet intent and adds own intent to it
  */
@@ -396,3 +369,5 @@ fun <T> Queue<T>.pollIterator() = object : Iterator<T> {
 
 	override fun next() = poll()
 }
+
+fun Activity.toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
