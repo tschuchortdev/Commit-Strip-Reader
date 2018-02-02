@@ -120,7 +120,7 @@ class ComicRepositoryImpl
 		catch (e: Throwable) {
 			emitter.onError(e)
 		}
-	}!!
+	}.subscribeOn(Schedulers.io())!!
 
 	class CancellationFailure(msg: String): Throwable(msg)
 

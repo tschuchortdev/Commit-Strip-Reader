@@ -37,6 +37,8 @@ interface FeedContract : Contract {
 		object ShareClicked : Event()
 		object SaveClicked : Event()
 		object DialogCanceled : Event()
+		object SaveSuccessful : Event()
+		data class SaveFailed(val t: Throwable) : Event()
 	}
 
 	sealed class SideEffect : Contract.SideEffect {
@@ -53,8 +55,9 @@ interface FeedContract : Contract {
 		object ShowLoadingFailed : ViewEffect()
 		object ShowNoMoreComics : ViewEffect()
 		object ScrollToTop : ViewEffect()
-		object ShowFailedToShare : ViewEffect()
-		object ShowFailedToSave : ViewEffect()
+		object ShowShareFailed : ViewEffect()
+		object ShowSaveSuccesful : ViewEffect()
+		object ShowSaveFailed : ViewEffect()
 	}
 
 	abstract class Presenter(uiScheduler: Scheduler)

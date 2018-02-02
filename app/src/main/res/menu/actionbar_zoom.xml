@@ -4,8 +4,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_save"
+        android:title="@string/action_save"
+        android:icon="@drawable/ic_download"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/action_share"
         android:title="@string/action_share_commitstrip"
         android:icon="@drawable/ic_share"
         app:showAsAction="always" />
+
+
 </menu>

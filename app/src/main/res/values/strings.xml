@@ -4,7 +4,6 @@
     <string name="change_display_style">change display style</string>
     <string name="settings">Settings</string>
     <string name="no_internet_warning">no internet connection</string>
-    <string name="failed_to_load_comics">failed to load comics</string>
     <string name="toast_failed_to_load_comics">failed to load comics</string>
     <string name="card_title_description">Title</string>
     <string name="card_image_description">Comic</string>
@@ -23,6 +22,8 @@
     <string name="action_share_commitstrip">Share CommitStrip</string>
     <string name="toast_failed_to_share">failed to share image</string>
     <string name="toast_failed_to_save_comic">failed to save comic</string>
+    <string name="toast_saved_comic">Saved comic</string>
 	<string name="dialog_option_save">Save</string>
     <string name="dialog_option_share">Share</string>
+    <string name="action_save">Save CommitStrip</string>
 </resources>

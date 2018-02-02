@@ -38,12 +38,14 @@ class ActivityModule(private val activity: Activity) {
     @Provides @PerActivity
     fun provideZoomPresenterFactory(@UiScheduler uiScheduler: Scheduler,
                                     navigator: Navigator,
-                                    analytics: FirebaseAnalytics)
+                                    analytics: FirebaseAnalytics,
+                                    storage: LocalStorage,
+                                    repo: ComicRepository)
             : ZoomContract.Presenter.Factory
             = object : ZoomContract.Presenter.Factory {
 
         override fun create(selectedComic: Comic)
-                = ZoomPresenter(selectedComic, uiScheduler, navigator, analytics)
+                = ZoomPresenter(selectedComic, uiScheduler, navigator, analytics, repo, storage)
     }
 
     @Provides @PerActivity

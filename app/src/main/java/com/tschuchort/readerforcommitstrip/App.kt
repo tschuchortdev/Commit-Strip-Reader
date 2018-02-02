@@ -19,7 +19,6 @@ import com.tschuchort.readerforcommitstrip.zoom.ZoomActivity
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -28,15 +27,15 @@ import javax.inject.Inject
 class App : MultiDexApplication() {
 
 	@Inject
-	lateinit protected var settings: SettingsRepository
+	protected lateinit var settings: SettingsRepository
 
 	@Inject
-	lateinit protected var notificationManager: NotificationManager
+	protected lateinit var notificationManager: NotificationManager
 
 	@Inject
-	lateinit protected var comicRepo: ComicRepository
+	protected lateinit var comicRepo: ComicRepository
 
-	private var newComicsSubscription: Disposable? = null
+	protected var newComicsSubscription: Disposable? = null
 
 	var component by mutableLazy {
 		DaggerAppComponent.builder()
@@ -101,7 +100,6 @@ class App : MultiDexApplication() {
 	private fun sendNewComicNotification(comic: Comic): Completable =
 		comicRepo.loadBitmap(comic.imageUrl)
 				.retryDelayed(10, TimeUnit.SECONDS, 6)
-				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
 				.doOnSuccess { bitmap ->
 

@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Environment
 import io.reactivex.Single
+import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
@@ -59,7 +60,7 @@ class LocalStorage
         ostream.close()
 
         return@fromCallable imageFile
-    }
+    }.subscribeOn(Schedulers.io())
 
     /**
      * saves the bitmap in the device storage directory, in the specified folder with the given name

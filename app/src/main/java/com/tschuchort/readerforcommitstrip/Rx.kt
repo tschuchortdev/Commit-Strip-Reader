@@ -212,6 +212,8 @@ class BehaviorObservable<T>(initialValue: T, source: Observable<T>) : Observable
 	val value: T get() = subject.value!!
 }
 
+fun <T> Completable.onCompleteReturn(value: T): Single<T> = toSingleDefault(value)
+
 /**
  * a relay that saves all emissions in a queue when no one is subscribed
  * then emits them again as soon as someone subscribes

@@ -8,20 +8,18 @@ import com.tschuchort.readerforcommitstrip.feed.FeedContract.Orientation.VERTICA
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.rxkotlin.ofType
-import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 @PerActivity
 class FeedPresenter
 		@Inject constructor(
-				private val comicRepository: ComicRepository,
+				private val comicRepo: ComicRepository,
 				@UiScheduler uiScheduler: Scheduler,
 				systemManager: SystemManager,
 				navigator: Navigator,
+				storage: LocalStorage,
 				private val analytics: FirebaseAnalytics)
 		: Presenter(uiScheduler) {
-
-	private val ioScheduler = Schedulers.io()
 
 	override val initialState = State(
 			comics = emptyList(),
@@ -52,11 +50,10 @@ class FeedPresenter
 			sideEffects.ofType<SideEffect.LoadMore>()
 					.dropMapSingle { (lastComic, lastIndex) ->
 						(if(lastComic != null)
-							comicRepository.getComicsAfter(lastComic, lastIndex)
+							comicRepo.getComicsAfter(lastComic, lastIndex)
 						else
-							comicRepository.getNewestComics()
+							comicRepo.getNewestComics()
 						)
-								.subscribeOn(ioScheduler)
 								.retryDelayed(delay = 1000, times = 5)
 								.map<Event>(Event::ComicsLoaded)
 								.onErrorReturn(Event::LoadingFailed)
@@ -65,25 +62,33 @@ class FeedPresenter
 			sideEffects.ofType<SideEffect.RefreshNewest>()
 					.switchMapSingle { (newestComic) ->
 						(if(newestComic != null)
-							comicRepository.getComicsBefore(newestComic)
+							comicRepo.getComicsBefore(newestComic)
 						else
-							comicRepository.getNewestComics()
+							comicRepo.getNewestComics()
 						)
-								.subscribeOn(ioScheduler)
 								.retryDelayed(delay = 1000, times = 5)
 								.map<Event>(Event::DataRefreshed)
 								.onErrorReturn(Event::RefreshFailed)
 					},
 
 			systemManager.observeInternetConnectivity()
-					.subscribeOn(ioScheduler)
 					.distinctUntilChanged()
 					.map(Event::NetworkStatusChanged),
 
+			sideEffects.ofType<SideEffect.SaveComic>()
+					.flatMapSingle { (comic) ->
+						comicRepo.loadBitmap(comic.imageUrl)
+								.flatMapCompletable { bmp ->
+									storage.saveImageToGallery(bmp, comic.title, "Commit Strips")
+								}
+								.onCompleteReturn<Event>(Event.SaveSuccessful)
+					}
+					.onErrorReturn { Event.SaveFailed(it) },
+
+
 			sideEffects.ofType<SideEffect.DownloadImageForSharing>()
 					.flatMapSingle { cmd ->
-						comicRepository.loadBitmap(cmd.url)
-								.subscribeOn(ioScheduler)
+						comicRepo.loadBitmap(cmd.url)
 								.map { bmp -> Pair(bmp, cmd.title) }
 					}
 					.map { (bmp, title) -> Event.ImageDownloaded(bmp, title) }
@@ -151,7 +156,7 @@ class FeedPresenter
 
 		is Event.ImageDownloaded -> StateUpdate(oldState, ViewEffect.Share(event.image, event.title))
 
-		is Event.FailedToDownloadImage -> StateUpdate(oldState, ViewEffect.ShowFailedToShare)
+		is Event.FailedToDownloadImage -> StateUpdate(oldState, ViewEffect.ShowShareFailed)
 
 		is Event.DialogCanceled -> StateUpdate(oldState.copy(selectedComic = null))
 
@@ -160,6 +165,10 @@ class FeedPresenter
 
 			StateUpdate(oldState.copy(selectedComic = null), SideEffect.SaveComic(comic))
 		}
+
+		is Event.SaveSuccessful -> StateUpdate(oldState, ViewEffect.ShowSaveSuccesful)
+
+		is Event.SaveFailed -> StateUpdate(oldState, ViewEffect.ShowSaveSuccesful)
 
 		is Event.ShareClicked -> {
 			val url = oldState.selectedComic!!.imageUrl

@@ -12,15 +12,21 @@ interface ZoomContract : Contract {
 
 	sealed class Event : Contract.Event {
 		object ShareClicked : Event()
+		object SaveClicked : Event()
 		object UpClicked : Event()
+		object SaveSuccessful : Event()
+		data class SaveFailed(val t: Throwable) : Event()
 	}
 
 	sealed class SideEffect : Contract.SideEffect {
 		object NavigateUp : SideEffect()
+		data class SaveComic(val comic: Comic) : SideEffect()
 	}
 
 	sealed class ViewEffect : Contract.ViewEffect {
-		data class Share(val comic: Comic) : ViewEffect()
+		data class ShareComic(val comic: Comic) : ViewEffect()
+		object ShowSaveSuccesful : ViewEffect()
+		data class ShowSaveFailed(val t: Throwable) : ViewEffect()
 	}
 
 	abstract class Presenter(uiScheduler: Scheduler)

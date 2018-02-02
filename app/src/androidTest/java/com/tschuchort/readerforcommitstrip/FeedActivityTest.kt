@@ -42,7 +42,7 @@ class FeedActivityTest : BaseActivityTest() {
 	/*@Test
 	fun testShareDialogShown() {
 		doOnUi {
-			activity.doSideEffect(ViewEffect.Share(testComic))
+			activity.doSideEffect(ViewEffect.ShareComic(testComic))
 		}
 
 		//intending(hasAction(ACTION_CHOOSER)).respondWith(ActivityResult(Activity.RESULT_OK, null))

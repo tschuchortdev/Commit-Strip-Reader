@@ -1,7 +1,6 @@
 package com.tschuchort.readerforcommitstrip.feed
 
 import android.os.Bundle
-import android.support.annotation.StringRes
 import android.support.design.widget.BottomSheetDialog
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.SwipeRefreshLayout
@@ -15,7 +14,6 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import com.airbnb.epoxy.SimpleEpoxyController
 import com.jakewharton.rxbinding2.support.v4.widget.RxSwipeRefreshLayout
 import com.jakewharton.rxbinding2.view.RxMenuItem
@@ -56,7 +54,7 @@ class FeedActivity : AppCompatActivity(), FeedContract.View {
         component.inject(this)
 
 		setContentView(R.layout.activity_feed)
-        title = resources.getString(R.string.feed_title)
+        actionBar.title = resources.getString(R.string.feed_title)
 
 		/*
 		 actionbar menu has to be inflated manually in onCreate because the render
@@ -98,10 +96,6 @@ class FeedActivity : AppCompatActivity(), FeedContract.View {
 		feedController.onSaveInstanceState(outState)
 		presenter.onSaveInstanceState(outState)
 	}
-
-	override fun setTitle(title: CharSequence?) = actionBar.setTitle(title)
-
-	override fun setTitle(@StringRes titleId: Int) = actionBar.setTitle(titleId)
 
 	override fun render(state: State) {
 		when(state.feedOrientation) {
@@ -146,16 +140,16 @@ class FeedActivity : AppCompatActivity(), FeedContract.View {
 
 		is ViewEffect.ShowNoMoreComics  -> toast(getString(R.string.toast_no_more_comics_to_load))
 
-		is ViewEffect.ShowFailedToSave  -> toast(getString(R.string.toast_failed_to_save_comic))
+		is ViewEffect.ShowSaveFailed    -> toast(getString(R.string.toast_failed_to_save_comic))
 
 		is ViewEffect.Share             -> shareImage(effect.image, effect.title, getString(R.string.share_call_to_action))
 
-		is ViewEffect.ShowFailedToShare -> toast(getString(R.string.toast_failed_to_share))
+		is ViewEffect.ShowShareFailed   -> toast(getString(R.string.toast_failed_to_share))
 
 		is ViewEffect.ScrollToTop       -> feedRecycler.smoothScrollToPosition(0)
-	}
 
-	private fun toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
+		is ViewEffect.ShowSaveSuccesful -> toast(getString(R.string.toast_saved_comic))
+	}
 
 	override val events by lazy {
 		Observable.mergeArray(

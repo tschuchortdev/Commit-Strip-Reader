@@ -78,13 +78,17 @@ class ZoomActivity : AppCompatActivity(), ZoomContract.View {
 	}
 
 	override fun doSideEffect(effect: ViewEffect) = when(effect) {
-		is ViewEffect.Share -> shareText(effect.comic.link, getString(R.string.share_call_to_action))
+		is ViewEffect.ShareComic        -> shareText(effect.comic.link, getString(R.string.share_call_to_action))
+		is ViewEffect.ShowSaveSuccesful -> toast(getString(R.string.toast_saved_comic))
+		is ViewEffect.ShowSaveFailed    -> toast(getString(R.string.toast_failed_to_save_comic))
 	}
 
 	override val events by lazy {
 		Observable.merge(
 				RxMenuItem.clicks(actionBar.menu.findItem(R.id.action_share))
 						.map<Event> { Event.ShareClicked },
+				RxMenuItem.clicks(actionBar.menu.findItem(R.id.action_save))
+						.map<Event> { Event.SaveClicked },
 				RxToolbar.navigationClicks(actionBar)
 						.map<Event> { Event.UpClicked })!!
 	}
