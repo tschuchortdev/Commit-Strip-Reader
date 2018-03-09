@@ -7,6 +7,7 @@ import android.support.test.espresso.matcher.RootMatchers.isDialog
 import android.support.test.espresso.matcher.ViewMatchers.*
 import android.support.test.filters.LargeTest
 import android.support.test.runner.AndroidJUnit4
+import com.tschuchort.readerforcommitstrip.feed.FeedActivity
 import com.tschuchort.readerforcommitstrip.feed.FeedContract
 import com.tschuchort.readerforcommitstrip.feed.FeedContract.*
 import org.hamcrest.Matchers.not
@@ -17,7 +18,7 @@ import org.mockito.Mock
 
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-class FeedActivityTest : BaseActivityTest() {
+class FeedActivityTest : BaseActivityTest<FeedActivity>(FeedActivity::class.java) {
 
 	private val testComic = Comic("Test Comic", "0/0/1970", null,
 			"http://www.commitstrip.com/en/2017/09/21/project-scope/",

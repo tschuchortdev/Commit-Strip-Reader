@@ -1,17 +1,17 @@
 package com.tschuchort.readerforcommitstrip
 
+import android.app.Activity
 import android.support.test.espresso.intent.rule.IntentsTestRule
-import com.tschuchort.readerforcommitstrip.feed.FeedActivity
 import org.junit.Before
 import org.junit.Rule
 import java.util.concurrent.Semaphore
 
-abstract class BaseActivityTest {
+abstract class BaseActivityTest<out T : Activity>(activityClass: Class<out T>) {
     @get:Rule
     val daggermockRule = EspressoDaggerMockRule()
 
     @get:Rule
-    val intentsRule = IntentsTestRule(FeedActivity::class.java, false, false)
+    val intentsRule = IntentsTestRule(activityClass, false, false)
 
     protected val activity by lazy { intentsRule.activity!! }
 
