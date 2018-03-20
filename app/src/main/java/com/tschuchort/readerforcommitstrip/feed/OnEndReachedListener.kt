@@ -9,12 +9,19 @@ import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.Observable
+import timber.log.Timber
 
 fun RecyclerView.addOnEndReachedListener(visibleItemThreshhold: Int = 0, onEndReached: (RecyclerView) -> Unit): RecyclerView.OnScrollListener {
 	val scrollListener = object : RecyclerView.OnScrollListener() {
 		private var previousScrollWasEnd = false
 
-		override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
+		override fun onScrolled(rv: RecyclerView?, dx: Int, dy: Int) {
+			// might be null due to asynchronous execution of listeneres and view.requestLayout
+			if(rv == null) {
+				Timber.w("RecyclerView.onScroll listener invocation dropped due to recyclerView argument being null")
+				return
+			}
+
 			val layoutManager = rv.layoutManager
 			val visibleItemCount = layoutManager.childCount
 			val totalItemCount = layoutManager.itemCount

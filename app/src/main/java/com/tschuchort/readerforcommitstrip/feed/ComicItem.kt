@@ -11,6 +11,7 @@ import com.airbnb.epoxy.EpoxyModelWithHolder
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.tschuchort.readerforcommitstrip.*
+import timber.log.Timber
 
 open class ComicItem(
 		@EpoxyAttribute @JvmField val comic: Comic,
@@ -28,8 +29,24 @@ open class ComicItem(
 		super.bind(holder)
 
 		holder.titleView.text = comic.title
-		holder.comicView.setOnClickListener { onClick(comic) }
-		holder.comicView.setOnLongClickListener { onLongClick(comic); true }
+
+		holder.comicView.setOnClickListener { view ->
+			if(view == null)
+				Timber.w("onClick listener invocation dropped due to view being null")
+			else
+				onClick(comic)
+		}
+
+		holder.comicView.setOnLongClickListener { view ->
+			if (view == null) {
+				Timber.w("onClick listener invocation dropped due to view being null")
+				false
+			} else {
+				onLongClick(comic)
+				true
+			}
+		}
+
 
 		Glide.with(holder.context)
 				.load(comic.imageUrl)
