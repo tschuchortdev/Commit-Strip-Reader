@@ -11,6 +11,7 @@ import com.jakewharton.rxbinding2.support.v7.widget.RxToolbar
 import com.jakewharton.rxbinding2.view.RxMenuItem
 import com.tschuchort.readerforcommitstrip.*
 import com.tschuchort.readerforcommitstrip.zoom.ZoomContract.*
+import com.tschuchort.retainedproperties.retained
 import io.reactivex.Observable
 import kotterknife.bindView
 import javax.inject.Inject
