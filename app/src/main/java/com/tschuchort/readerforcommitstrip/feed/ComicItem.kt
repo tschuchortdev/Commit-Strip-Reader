@@ -58,6 +58,9 @@ open class ComicItem(
 	override fun unbind(holder: Holder) {
 		super.unbind(holder)
 		Glide.clear(holder.comicView)
+
+		holder.comicView.setOnClickListener(null)
+		holder.comicView.setOnLongClickListener(null)
 	}
 
 	override fun createNewHolder() = Holder()

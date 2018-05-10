@@ -74,8 +74,6 @@ class FeedActivity : AppCompatActivity(), FeedContract.View {
                 layoutInflater.inflate(R.layout.download_share_dialog_sheet, null)
         )
 
-		dialog.setOnCancelListener { dialogCanceledRelay.accept(Unit) }
-
 		if(savedInstanceState != null) {
 			feedController.onRestoreInstanceState(savedInstanceState)
 			presenter.onRestoreInstanceState(savedInstanceState)
@@ -84,11 +82,13 @@ class FeedActivity : AppCompatActivity(), FeedContract.View {
 
     override fun onStart() {
         super.onStart()
+		dialog.setOnCancelListener { dialogCanceledRelay.accept(Unit) }
 		presenter.attachView(this)
     }
 
 	override fun onStop() {
 		presenter.detachView(isFinishing)
+		dialog.setOnCancelListener(null)
 		super.onStop()
 	}
 
