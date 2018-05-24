@@ -5,6 +5,8 @@ import com.jakewharton.rxrelay2.Relay
 import io.reactivex.*
 import io.reactivex.Observable
 import io.reactivex.Observer
+import io.reactivex.disposables.Disposable
+import io.reactivex.functions.Consumer
 import io.reactivex.rxkotlin.zipWith
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
@@ -32,7 +34,7 @@ inline fun <T,S> Observable<T>.dropMap(crossinline f: (T) -> Observable<out S>):
  */
 inline fun <T,S> Flowable<T>.dropMap(crossinline f: (T) -> Publisher<out S>): Flowable<out S>
 		= onBackpressureDrop()
-		.flatMap { f(it) }
+		.flatMap ({ f(it) }, 1)
 
 /**
  * dropMap is basically the opposite of switchMap
@@ -51,99 +53,82 @@ inline fun <T,S> Observable<T>.dropMapSingle(crossinline f: (T) -> SingleSource<
  * instead of unsubscribing from unfinished observables when a new one comes in,
  * it drops all new emissions until the one currently running is finished
  */
-inline fun <T,S> Flowable<T>.dropMapSingle(crossinline f: (T) -> SingleSource<out S>): Flowable<out S>
-		= onBackpressureDrop()
-		.flatMapSingle { f(it) }
+inline fun <T,S> Flowable<T>.dropMapSingle(crossinline f: (T) -> SingleSource<out S>)
+		: Flowable<out S> = onBackpressureDrop().flatMapSingle { f(it) }
 
-inline fun <T,S> Flowable<T>.mapParallel(scheduler: Scheduler = Schedulers.computation(), maxConcurrency: Int = 4, crossinline f: (T) -> S): Flowable<S> =
-		flatMap({
+inline fun <T,S> Flowable<T>.mapParallel(scheduler: Scheduler = Schedulers.computation(),
+										 maxConcurrency: Int = 4, crossinline f: (T) -> S)
+		: Flowable<S> = flatMap({
 			Flowable.just(it)
 					.subscribeOn(scheduler)
 					.map { f(it) }
 		}, maxConcurrency)
 
-fun <T,S> Observable<Pair<T,S>>.unzip() = Pair(
+inline fun <T,S,P> Observable<P>.unzip(crossinline fst: P.() -> T?, crossinline snd: P.() -> S?,
+										 swallowNulls: Boolean = true)
+		: Pair<Observable<T>, Observable<S>> {
+
+	val obs = this.share()
+	return Pair(obs.unzipComponent(fst, swallowNulls), obs.unzipComponent(snd, swallowNulls))
+}
+
+/**
+ * for internal use only
+ */
+inline fun <P, T> Observable<P>.unzipComponent(crossinline getComponent: P.() -> T?,
+											   swallowNulls: Boolean): Observable<T> =
 		Observable.create<T> { emitter ->
-			this@unzip.subscribe({ (fst, _) ->
-				emitter.onNext(fst)
+	this@unzipComponent.subscribe(
+			{
+				val component = getComponent(it)
+				if (component != null || swallowNulls)
+					emitter.onNext(component!!)
+				else if (!swallowNulls)
+					emitter.onError(NullPointerException("encountered null in component of type to be unzipped"))
 			}, { err ->
 				emitter.onError(err)
 			}, {
 				emitter.onComplete()
 			})
-		},
-		Observable.create<S> { emitter ->
-			this@unzip.subscribe({ (_, snd) ->
-				emitter.onNext(snd)
-			}, { err ->
-				emitter.onError(err)
-			}, {
-				emitter.onComplete()
-			})
-		})
+}
 
-fun <T,S> Flowable<Pair<T,S>>.unzip(firstObserver: Observer<T>, secondObserver: Observer<S>)
-		= toObservable().unzip(firstObserver, secondObserver)
+fun <T, S> Observable<Pair<T,S>>.unzip(swallowNulls: Boolean = true)
+		= unzip(Pair<T,S>::component1, Pair<T,S>::component2, swallowNulls)
 
-fun <T,S> Observable<Pair<T,S>>.unzip(firstObserver: Observer<T>, secondObserver: Observer<S>)
-		= unzip().let { (fst, snd) ->
+fun <T,S> Observable<Pair<T,S>>.unzip(firstObserver: Observer<T>, secondObserver: Observer<S>,
+									  swallowNulls: Boolean = true)
+		= unzip(swallowNulls).let { (fst, snd) : Pair<Observable<T>, Observable<S>> ->
 			fst.subscribeWith(firstObserver)
 			snd.subscribeWith(secondObserver)
 		}!!
 
-fun <T,S,R> Flowable<Triple<T,S,R>>.unzip()
-		= toObservable().unzip()
+inline fun <P, T, S, R> Observable<P>.unzip(crossinline fst: P.() -> T?, crossinline snd: P.() -> S?,
+											crossinline thd: P.() -> R?, swallowNulls: Boolean = true)
+		: Triple<Observable<T>, Observable<S>, Observable<R>> {
 
-fun <T,S,R> Observable<Triple<T,S,R>>.unzip() = Triple(
-		Observable.create<T> { emitter ->
-			this@unzip.subscribe({ (fst, _, _) ->
-				emitter.onNext(fst)
-			}, { err ->
-				emitter.onError(err)
-			}, {
-				emitter.onComplete()
-			})
-		},
-		Observable.create<S> { emitter ->
-			this@unzip.subscribe({ (_, snd, _) ->
-				emitter.onNext(snd)
-			}, { err ->
-				emitter.onError(err)
-			}, {
-				emitter.onComplete()
-			})
-		},
-		Observable.create<R> { emitter ->
-			this@unzip.subscribe({ (_, _, thd) ->
-				emitter.onNext(thd)
-			}, { err ->
-				emitter.onError(err)
-			}, {
-				emitter.onComplete()
-			})
-		})
+	val obs = this.share()
+	return Triple(obs.unzipComponent(fst, swallowNulls),
+				  obs.unzipComponent(snd, swallowNulls),
+				  obs.unzipComponent(thd, swallowNulls))
+}
 
+fun <T,S,R> Observable<Triple<T,S,R>>.unzip(swallowNulls: Boolean = true)
+		= unzip(Triple<T,S,R>::component1, Triple<T,S,R>::component2,
+				Triple<T,S,R>::component3, swallowNulls)
 
-
-fun <T,S,R> Flowable<Triple<T,S,R>>.unzip(firstObserver: Observer<T>, secondObserver: Observer<S>, thirdObserver: Observer<R>)
-		= toObservable().unzip(firstObserver, secondObserver, thirdObserver)
-
-fun <T,S,R> Observable<Triple<T,S,R>>.unzip(firstObserver: Observer<T>, secondObserver: Observer<S>, thirdObserver: Observer<R>)
-		= unzip().let { (fst, snd, thd) ->
+fun <T,S,R> Observable<Triple<T,S,R>>.unzip(firstObserver: Observer<T>, secondObserver: Observer<S>,
+											thirdObserver: Observer<R>, swallowNulls: Boolean = true)
+		= unzip(swallowNulls).let { (fst, snd, thd)  ->
 			fst.subscribeWith(firstObserver)
 			snd.subscribeWith(secondObserver)
 			thd.subscribeWith(thirdObserver)
-		}!!
+		}
 
 fun <T> Observable<T>.lastOrThrow(throwable: Throwable = IllegalStateException("observable emitted no items"))
-		= lastOrError()
-		.doOnError { throw throwable }
-		.blockingGet()!!
+		= lastOrError().doOnError { throw throwable }.blockingGet()!!
 
 fun <T> Flowable<T>.lastOrThrow(throwable: Throwable = IllegalStateException("observable emitted no items"))
-		= lastOrError()
-		.doOnError { throw throwable }
-		.blockingGet()
+		= lastOrError().doOnError { throw throwable }.blockingGet()!!
 
 fun <T> Single<T>.retryDelayed(delay: Long, timeUnit: TimeUnit = MILLISECONDS, times: Int = 0)
 		= toFlowable().retryDelayed(delay, timeUnit, times).lastOrError()!!
@@ -189,10 +174,21 @@ inline fun <T,S> Observable<T>.flatMapMaybeIndexed(crossinline mapper: (T, Int) 
 inline fun <T> Observable<T>.flatCompletableIndexed(crossinline mapper: (T, Int) -> Completable)
 		= indexed().flatMapCompletable { (t, count) -> mapper(t, count) }!!
 
-fun <T> Observable<T>.onErrorReturn(value: T) = onErrorReturnItem(value)!!
-fun <T> Maybe<T>.onErrorReturn(value: T) = onErrorReturnItem(value)!!
-fun <T> Single<T>.onErrorReturn(value: T) = onErrorReturnItem(value)!!
-fun <T> Flowable<T>.onErrorReturn(value: T) = onErrorReturnItem(value)!!
+@Suppress("UNCHECKED_CAST")
+fun <X, T : X, S : X> Observable<T>.onErrorReturn(value: S): Observable<X>
+		= (this as Observable<X>).onErrorReturnItem(value)
+
+@Suppress("UNCHECKED_CAST")
+fun <X, T : X, S : X> Maybe<T>.onErrorReturn(value: S): Maybe<X>
+		= (this as Maybe<X>).onErrorReturnItem(value)
+
+@Suppress("UNCHECKED_CAST")
+fun <X, T : X, S : X> Single<T>.onErrorReturn(value: S): Single<X>
+		= (this as Single<X>).onErrorReturnItem(value)
+
+@Suppress("UNCHECKED_CAST")
+fun <X, T : X, S : X> Flowable<T>.onErrorReturn(value: S): Flowable<X>
+		= (this as Flowable<X>).onErrorReturnItem(value)
 
 /**
  * a BehaviorObservable is an Observable that emits its last value on subscribtion
@@ -265,4 +261,32 @@ class QueueRelay<T>(
 	override fun hasObservers() = isEmptyingQueue || relay.hasObservers()
 
 	enum class OverflowStrategy { ERROR, DROP_LATEST, DROP_OLDEST }
+}
+
+fun <T> Observable<T>.toUnit(): Observable<Unit> = map { Unit }
+
+@Suppress("UNCHECKED_CAST")
+fun <X, T : X, S : X> Observable<T>.then(other: S): Observable<X>
+		= (this as Observable<X>).concatWith(Observable.just(other)) // dark magic to make type inference play nice
+
+@Suppress("UNCHECKED_CAST")
+fun <X, T : X, S : X> Observable<T>.then(other: Observable<S>): Observable<X>
+		= (this as Observable<X>).concatWith(other) // dark magic to make type inference play nice
+
+@Suppress("UNCHECKED_CAST")
+fun <X, T : X, S : X> Observable<T>.then(other: Single<S>): Observable<X>
+		= (this as Observable<X>).concatWith(other.toObservable()) // dark magic to make type inference play nice
+
+fun <T> Observable<T>.subscribeWithRelay(relay: Consumer<T>): Disposable = subscribe(
+		{ emission -> relay.accept(emission) },
+		{ error -> throw(error)},
+		{}
+)
+
+class DisposableWithListener(private val disposable: Disposable,
+							 private val onDispose: () -> Unit) : Disposable by disposable {
+	override fun dispose() {
+		disposable.dispose()
+		onDispose()
+	}
 }
