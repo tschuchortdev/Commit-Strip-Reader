@@ -244,19 +244,18 @@ class QueueRelay<T>(
 	override fun accept(value: T) {
 		require(value != null)
 
-		if(relay.hasObservers())
-			relay.accept(value)
-		else if(queue.size < queueSize) {
-			queue += value
-		}
-		else when(overflowStrategy) {
-			OverflowStrategy.ERROR -> throw RuntimeException("queue size exceeded")
-			OverflowStrategy.DROP_OLDEST -> {
-				queue.remove()
-				queue += value
+		when {
+            relay.hasObservers()   -> relay.accept(value)
+            queue.size < queueSize -> queue += value
+            else                   -> when(overflowStrategy) {
+				OverflowStrategy.ERROR -> throw RuntimeException("queue size exceeded")
+				OverflowStrategy.DROP_OLDEST -> {
+					queue.remove()
+					queue += value
+				}
+				OverflowStrategy.DROP_LATEST -> Unit
 			}
-			OverflowStrategy.DROP_LATEST -> Unit
-		}
+        }
 	}
 
 	override fun hasObservers() = isEmptyingQueue || relay.hasObservers()

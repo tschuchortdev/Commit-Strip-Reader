@@ -1,5 +1,6 @@
 package com.tschuchort.readerforcommitstrip.zoom
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
@@ -10,9 +11,9 @@ import com.github.chrisbanes.photoview.PhotoView
 import com.jakewharton.rxbinding2.support.v7.widget.RxToolbar
 import com.jakewharton.rxbinding2.view.RxMenuItem
 import com.tschuchort.readerforcommitstrip.*
-import com.tschuchort.readerforcommitstrip.zoom.ZoomContract.*
+import com.tschuchort.readerforcommitstrip.zoom.ZoomContract.Presenter
+import com.tschuchort.readerforcommitstrip.zoom.ZoomContract.State
 import com.tschuchort.retainedproperties.retained
-import io.reactivex.Observable
 import kotterknife.bindView
 import javax.inject.Inject
 
@@ -78,19 +79,27 @@ class ZoomActivity : AppCompatActivity(), ZoomContract.View {
 				.into(photoView)
 	}
 
-	override fun doSideEffect(effect: ViewEffect) = when(effect) {
-		is ViewEffect.ShareComic        -> shareText(effect.comic.link, getString(R.string.share_call_to_action))
-		is ViewEffect.ShowSaveSuccesful -> toast(getString(R.string.toast_saved_comic))
-		is ViewEffect.ShowSaveFailed    -> toast(getString(R.string.toast_failed_to_save_comic))
+	// signals
+
+	override val shareClicked by lazy {
+		RxMenuItem.clicks(actionBar.menu.findItem(R.id.action_share)).share().toUnit()
 	}
 
-	override val events by lazy {
-		Observable.merge(
-				RxMenuItem.clicks(actionBar.menu.findItem(R.id.action_share))
-						.map<Event> { Event.ShareClicked },
-				RxMenuItem.clicks(actionBar.menu.findItem(R.id.action_save))
-						.map<Event> { Event.SaveClicked },
-				RxToolbar.navigationClicks(actionBar)
-						.map<Event> { Event.UpClicked })!!
+	override val saveClicked by lazy {
+		RxMenuItem.clicks(actionBar.menu.findItem(R.id.action_save)).share().toUnit()
 	}
+
+	override val upClicked by lazy { RxToolbar.navigationClicks(actionBar).share().toUnit() }
+
+	// effects
+
+	override fun share(image: Bitmap, title: String)
+			= shareImage(image, title, getString(R.string.share_call_to_action))
+
+	override fun showSaveSuccessful() = toast(getString(R.string.toast_saved_comic))
+
+	override fun showSaveFailed() = toast(getString(R.string.toast_failed_to_save_comic))
+
+	override fun showDownloadFailed() = toast(getString(R.string.toast_download_failed))
+
 }

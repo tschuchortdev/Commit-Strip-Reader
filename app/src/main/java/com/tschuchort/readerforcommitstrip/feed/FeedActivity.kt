@@ -1,5 +1,6 @@
 package com.tschuchort.readerforcommitstrip.feed
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.support.design.widget.BottomSheetDialog
 import android.support.v4.content.ContextCompat
@@ -20,12 +21,11 @@ import com.jakewharton.rxbinding2.view.RxMenuItem
 import com.jakewharton.rxbinding2.view.RxView
 import com.jakewharton.rxrelay2.PublishRelay
 import com.tschuchort.readerforcommitstrip.*
-import com.tschuchort.readerforcommitstrip.feed.FeedContract.*
+import com.tschuchort.readerforcommitstrip.feed.FeedContract.Orientation
+import com.tschuchort.readerforcommitstrip.feed.FeedContract.State
 import com.tschuchort.retainedproperties.retained
 import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
-import io.reactivex.Observable
 import kotterknife.bindView
-import java.util.concurrent.TimeUnit
 
 class FeedActivity : AppCompatActivity(), FeedContract.View {
 	private val actionBar: Toolbar by bindView(R.id.action_bar)
@@ -136,44 +136,50 @@ class FeedActivity : AppCompatActivity(), FeedContract.View {
 			dialog.hide()
 	}
 
-	override fun doSideEffect(effect: ViewEffect) = when (effect) {
-		is ViewEffect.ShowLoadingFailed -> toast(getString(R.string.toast_failed_to_load_comics))
+	// effects
 
-		is ViewEffect.ShowNoMoreComics  -> toast(getString(R.string.toast_no_more_comics_to_load))
+	override fun showRefreshFailed() = toast(getString(R.string.toast_failed_to_load_comics))
 
-		is ViewEffect.ShowSaveFailed    -> toast(getString(R.string.toast_failed_to_save_comic))
+	override fun showNoMoreComics() = toast(getString(R.string.toast_no_more_comics_to_load))
 
-		is ViewEffect.Share             -> shareImage(effect.image, effect.title, getString(R.string.share_call_to_action))
+	override fun showSaveFailed() = toast(getString(R.string.toast_failed_to_save_comic))
 
-		is ViewEffect.ShowShareFailed   -> toast(getString(R.string.toast_failed_to_share))
+	override fun share(image: Bitmap, title: String)
+			= shareImage(image, title, getString(R.string.share_call_to_action))
 
-		is ViewEffect.ScrollToTop       -> feedRecycler.smoothScrollToPosition(0)
+	override fun showShareFailed() = toast(getString(R.string.toast_failed_to_share))
 
-		is ViewEffect.ShowSaveSuccesful -> toast(getString(R.string.toast_saved_comic))
+	override fun scrollToTop() = feedRecycler.smoothScrollToPosition(0)
+
+	override fun showSaveSuccesful() = toast(getString(R.string.toast_saved_comic))
+
+	override fun showDownloadFailed() = toast(getString(R.string.toast_download_failed))
+
+	// signals
+
+	override val settingsClicked by lazy { RxMenuItem.clicks(settingsMenuItem).share().toUnit() }
+
+	override val changeFeedLayoutClicked by lazy {
+		RxMenuItem.clicks(feedOrientationMenuItem).toUnit().toUnit()
 	}
 
-	override val events by lazy {
-		Observable.mergeArray(
-				RxMenuItem.clicks(settingsMenuItem)
-						.map { Event.SettingsClicked },
-				RxMenuItem.clicks(feedOrientationMenuItem)
-						.map { Event.OrientationChanged },
-				feedRecycler.onEndReachedEvents()
-						.throttleFirst(1500, TimeUnit.MILLISECONDS)
-						.map { Event.EndReached },
-				RxSwipeRefreshLayout.refreshes(swipeRefreshLayout)
-						.map { Event.Refresh },
-				comicClickRelay
-						.map(Event::ComicClicked),
-				comicLongClickRelay
-						.map(Event::ComicLongClicked),
-				dialogCanceledRelay
-						.map { Event.DialogCanceled },
-				RxView.clicks(saveButton)
-						.map { Event.SaveClicked },
-				RxView.clicks(shareButton)
-						.map { Event.ShareClicked })!!
+	override val endReached by lazy { feedRecycler.onEndReachedEvents().toUnit() }
+
+	override val refresh by lazy {
+		RxSwipeRefreshLayout.refreshes(swipeRefreshLayout).share().toUnit()
 	}
+
+	override val comicClicked = comicClickRelay!!
+
+	override val comicLongClicked = comicLongClickRelay!!
+
+	override val dialogCanceled = dialogCanceledRelay!!
+
+	override val saveClicked by lazy { RxView.clicks(saveButton).share().toUnit() }
+
+	override val shareClicked by lazy { RxView.clicks(shareButton).share().toUnit() }
+
+	// other
 
     private fun createBottomSheet(contentView: View): BottomSheetDialog {
         val sheet = BottomSheetDialog(this)

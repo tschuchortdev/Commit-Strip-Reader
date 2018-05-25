@@ -44,6 +44,8 @@ interface AppComponent {
 
 	fun exposeFirebaseAnalytics(): FirebaseAnalytics
 
+	fun exposeLocalStorage(): LocalStorage
+
 	fun newActivityComponent(activityModule: ActivityModule): ActivityComponent
 
 	fun inject(app: App)
@@ -105,7 +107,7 @@ class AppModule(val app: Application) {
 	}
 
 	@Provides @Singleton
-	fun provideAnalytics(@AppContext ctx: Context) = FirebaseAnalytics.getInstance(ctx)!!
+	fun provideAnalytics(@AppContext ctx: Context) = FirebaseAnalytics.getInstance(ctx)
 }
 
 @Qualifier

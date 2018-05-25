@@ -1,24 +1,25 @@
 package com.tschuchort.readerforcommitstrip.feed
 
-import com.google.firebase.analytics.FirebaseAnalytics
 import com.tschuchort.readerforcommitstrip.*
 import com.tschuchort.readerforcommitstrip.feed.FeedContract.*
-import com.tschuchort.readerforcommitstrip.feed.FeedContract.Orientation.HORIZONTAL
 import com.tschuchort.readerforcommitstrip.feed.FeedContract.Orientation.VERTICAL
 import io.reactivex.Observable
 import io.reactivex.Scheduler
-import io.reactivex.rxkotlin.ofType
+import io.reactivex.Single
 import javax.inject.Inject
+
+private typealias ProgramUpdate = Contract.ProgramUpdate<State, View>
+private typealias StateUpdate = Contract.StateUpdate<State, View>
+private typealias ViewAction = Contract.ViewAction<State, View>
 
 @PerActivity
 class FeedPresenter
 		@Inject constructor(
 				private val comicRepo: ComicRepository,
-				@UiScheduler uiScheduler: Scheduler,
-				systemManager: SystemManager,
+				private val systemManager: SystemManager,
 				navigator: Navigator,
-				storage: LocalStorage,
-				private val analytics: FirebaseAnalytics)
+				private val storage: LocalStorage,
+				@UiScheduler uiScheduler: Scheduler)
 		: Presenter(uiScheduler) {
 
 	override val initialState = State(
@@ -27,154 +28,83 @@ class FeedPresenter
 			internetConnected = true,
 			selectedComic = null,
 			loading = false,
-			refreshing = true
+			refreshing = false
 	)
+
+	init {
+		bindSignal(View::settingsClicked).subscribe { navigator.showSettings() }
+
+		bindSignal(View::comicClicked).subscribe { comic -> navigator.showZoomedScreen(comic) }
+	}
+
 
 	override fun restoreState(savedState: State) = savedState.copy(
 			loading = false,
 			refreshing = false
 	)
 
-	override val initCommand = SideEffect.RefreshNewest()
-
-	init {
-		sideEffects.ofType<SideEffect.ShowEnlarged>()
-				.subscribe { navigator.showZoomedScreen(it.selectedComic) }
-
-		sideEffects.ofType<SideEffect.StartSettings>()
-				.subscribe { navigator.showSettings() }
-	}
-
-	override val events = Observable.mergeArray(
-
-			sideEffects.ofType<SideEffect.LoadMore>()
-					.dropMapSingle { (lastComic, lastIndex) ->
-						(if(lastComic != null)
-							comicRepo.getComicsAfter(lastComic, lastIndex)
-						else
-							comicRepo.getNewestComics()
-						)
-								.retryDelayed(delay = 1000, times = 5)
-								.map<Event>(Event::ComicsLoaded)
-								.onErrorReturn(Event::LoadingFailed)
-					},
-
-			sideEffects.ofType<SideEffect.RefreshNewest>()
-					.switchMapSingle { (newestComic) ->
-						(if(newestComic != null)
-							comicRepo.getComicsBefore(newestComic)
-						else
-							comicRepo.getNewestComics()
-						)
-								.retryDelayed(delay = 1000, times = 5)
-								.map<Event>(Event::DataRefreshed)
-								.onErrorReturn(Event::RefreshFailed)
-					},
-
-			systemManager.observeInternetConnectivity()
-					.distinctUntilChanged()
-					.map(Event::NetworkStatusChanged),
-
-			sideEffects.ofType<SideEffect.SaveComic>()
-					.flatMapSingle { (comic) ->
-						comicRepo.loadBitmap(comic.imageUrl)
-								.flatMapCompletable { bmp ->
-									storage.saveImageToGallery(bmp, comic.title, "Commit Strips")
-								}
-								.onCompleteReturn<Event>(Event.SaveSuccessful)
-					}
-					.onErrorReturn { Event.SaveFailed(it) },
-
-
-			sideEffects.ofType<SideEffect.DownloadImageForSharing>()
-					.flatMapSingle { cmd ->
-						comicRepo.loadBitmap(cmd.url)
-								.map { bmp -> Pair(bmp, cmd.title) }
-					}
-					.map { (bmp, title) -> Event.ImageDownloaded(bmp, title) }
+	override fun update() = Observable.mergeArray<ProgramUpdate>(
+			handleInternetConnectivity(systemManager, State::internetConnected::set),
+			handleRefreshing(loadNewItems = ::loadNewComis,
+							 refreshSignal = bindSignal(View::refresh),
+							 getList = State::comics::get,
+							 setList = State::comics::set,
+							 setRefreshing = State::refreshing::set,
+							 showRefreshFailed = View::showRefreshFailed,
+							 scrollToTop = View::scrollToTop),
+			handlePagination(loadNextPage = ::loadNextPage,
+							 endReachedSignal = bindSignal(View::endReached),
+							 getCurrentState = ::latestState,
+							 getList = State::comics::get,
+							 setList = State::comics::set,
+							 setLoading = State::loading::set,
+							 showPagingFailed = View::showNoMoreComics),
+			handleListOrientationChange(bindSignal(View::changeFeedLayoutClicked), ::latestState),
+			handleSaveComic(storage = storage,
+							comicRepo = comicRepo,
+							saveSignal = bindSignal(View::saveClicked),
+							getComic = { latestState.selectedComic!! },
+							showSuccess = View::showSaveSuccesful,
+							showFail = View::showSaveFailed),
+			handleShareComic(comicRepo = comicRepo,
+							 shareSignal = bindSignal(View::shareClicked),
+							 getComic = { latestState.selectedComic!! },
+							 share = View::share,
+							 showDownloadFailed = View::showDownloadFailed),
+			handleShareSaveDialog(comicLongClickSignal = bindSignal(View::comicLongClicked),
+								  dialogCancelSignal = bindSignal(View::dialogCanceled),
+								  dialogOptionSelectedSignal = Observable.merge(
+										  bindSignal(View::shareClicked),
+										  bindSignal(View::saveClicked)),
+								  setSelectedComic = State::selectedComic::set)
 	)!!
 
-	override fun logEvent(event: Event) {
-		super.logEvent(event)
-		analytics.logEvent(event.javaClass.simpleName, null)
+	fun loadNextPage(): Single<List<Comic>> {
+		val lastComic = latestState.comics.lastOrNull()
+
+		return if (lastComic != null)
+				comicRepo.getComicsAfter(lastComic, latestState.comics.lastIndex)
+			else
+				comicRepo.getNewestComics()
 	}
 
-	override fun reduce(oldState: State, event: Event) = when (event) {
-		is Event.OrientationChanged -> StateUpdate(
-				oldState.copy(
-						feedOrientation =
-								if (oldState.feedOrientation == VERTICAL)
-									HORIZONTAL
-								else
-									VERTICAL
-				)
-		)
+	fun loadNewComis(): Single<List<Comic>> {
+		val newestComic = latestState.comics.firstOrNull()
 
-		is Event.Refresh            -> StateUpdate(
-				oldState.copy(refreshing = true),
-				SideEffect.RefreshNewest(oldState.comics.firstOrNull()))
-
-		is Event.DataRefreshed   -> StateUpdate(
-				oldState.copy(
-						comics = event.latestComics + oldState.comics,
-						refreshing = false
-				),
-				ViewEffect.ScrollToTop)
-
-		is Event.RefreshFailed   -> StateUpdate(
-				oldState.copy(refreshing = false),
-				ViewEffect.ShowLoadingFailed)
-
-		is Event.EndReached         ->
-			if(oldState.loading)
-				StateUpdate(oldState) // do nothing essentially
+		return if (newestComic != null)
+				comicRepo.getComicsBefore(newestComic)
 			else
-				StateUpdate(
-						oldState.copy(loading = true),
-						SideEffect.LoadMore(oldState.comics.lastOrNull(), oldState.comics.lastIndex))
-
-		is Event.LoadingFailed   -> StateUpdate(oldState.copy(loading = false), ViewEffect.ShowLoadingFailed)
-
-		is Event.ComicsLoaded    ->
-			if(event.newComics.isNotEmpty())
-				StateUpdate(
-						oldState.copy(
-								comics = oldState.comics + event.newComics,
-								loading = false
-						)
-				)
-			else
-				StateUpdate(oldState, ViewEffect.ShowNoMoreComics)
-
-		is Event.SettingsClicked    -> StateUpdate(oldState, SideEffect.StartSettings)
-
-		is Event.ComicClicked       -> StateUpdate(oldState, SideEffect.ShowEnlarged(event.selectedComic))
-
-		is Event.ComicLongClicked   -> StateUpdate(oldState.copy(selectedComic = event.selectedComic))
-
-		is Event.NetworkStatusChanged -> StateUpdate(oldState.copy(internetConnected = event.connected))
-
-		is Event.ImageDownloaded -> StateUpdate(oldState, ViewEffect.Share(event.image, event.title))
-
-		is Event.FailedToDownloadImage -> StateUpdate(oldState, ViewEffect.ShowShareFailed)
-
-		is Event.DialogCanceled -> StateUpdate(oldState.copy(selectedComic = null))
-
-		is Event.SaveClicked -> {
-			val comic = oldState.selectedComic!!
-
-			StateUpdate(oldState.copy(selectedComic = null), SideEffect.SaveComic(comic))
-		}
-
-		is Event.SaveSuccessful -> StateUpdate(oldState, ViewEffect.ShowSaveSuccesful)
-
-		is Event.SaveFailed -> StateUpdate(oldState, ViewEffect.ShowSaveSuccesful)
-
-		is Event.ShareClicked -> {
-			val url = oldState.selectedComic!!.imageUrl
-			val title = oldState.selectedComic.title
-
-			StateUpdate(oldState.copy(selectedComic = null), SideEffect.DownloadImageForSharing(url, title))
-		}
+				comicRepo.getNewestComics()
 	}
 }
+
+private inline fun handleListOrientationChange(changeOrientationSignal: Observable<*>,
+											   crossinline getState: () -> State)
+		= changeOrientationSignal.map(StateUpdate {
+		feedOrientation =
+				if (getState().feedOrientation == VERTICAL)
+					Orientation.HORIZONTAL
+				else
+					Orientation.VERTICAL
+		Unit
+	})

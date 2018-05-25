@@ -26,4 +26,5 @@
 	<string name="dialog_option_save">Save</string>
     <string name="dialog_option_share">Share</string>
     <string name="action_save">Save CommitStrip</string>
+	<string name="toast_download_failed">failed to download comic</string>
 </resources>
