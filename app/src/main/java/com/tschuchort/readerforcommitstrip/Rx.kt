@@ -96,11 +96,12 @@ fun <T, S> Observable<Pair<T,S>>.unzip(swallowNulls: Boolean = true)
 		= unzip(Pair<T,S>::component1, Pair<T,S>::component2, swallowNulls)
 
 fun <T,S> Observable<Pair<T,S>>.unzip(firstObserver: Observer<T>, secondObserver: Observer<S>,
-									  swallowNulls: Boolean = true)
-		= unzip(swallowNulls).let { (fst, snd) : Pair<Observable<T>, Observable<S>> ->
-			fst.subscribeWith(firstObserver)
-			snd.subscribeWith(secondObserver)
-		}!!
+									  swallowNulls: Boolean = true) {
+	unzip(swallowNulls).let { (fst, snd) ->
+		fst.subscribeWith(firstObserver)
+		snd.subscribeWith(secondObserver)
+	}!!
+}
 
 inline fun <P, T, S, R> Observable<P>.unzip(crossinline fst: P.() -> T?, crossinline snd: P.() -> S?,
 											crossinline thd: P.() -> R?, swallowNulls: Boolean = true)
@@ -290,3 +291,6 @@ class DisposableWithListener(private val disposable: Disposable,
 		onDispose()
 	}
 }
+
+fun <T, S> Observable<T>.map(x: S): Observable<S> = map { x }
+fun <T, S> Flowable<T>.map(x: S): Flowable<S> = map { x }
