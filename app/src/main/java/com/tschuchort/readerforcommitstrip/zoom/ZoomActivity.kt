@@ -83,13 +83,17 @@ class ZoomActivity : AppCompatActivity(), ZoomContract.View {
 
 	override val shareClicked by lazy {
 		RxMenuItem.clicks(actionBar.menu.findItem(R.id.action_share)).share().toUnit()
+				.andLogEvent("ShareClicked")
 	}
 
 	override val saveClicked by lazy {
 		RxMenuItem.clicks(actionBar.menu.findItem(R.id.action_save)).share().toUnit()
+				.andLogEvent("SaveClicked")
 	}
 
-	override val upClicked by lazy { RxToolbar.navigationClicks(actionBar).share().toUnit() }
+	override val upClicked by lazy {
+		RxToolbar.navigationClicks(actionBar).share().toUnit().andLogEvent("UpClicked")
+	}
 
 	// effects
 

@@ -26,7 +26,7 @@ interface Contract {
 		operator fun component2() = viewAction
 	}
 
-	class StateUpdate<St : Contract.State, Vi : Contract.View<St>>(stateChange: St.() -> Any?)
+	class StateChange<St : Contract.State, Vi : Contract.View<St>>(stateChange: St.() -> Any?)
 		: ProgramUpdate<St,Vi>(stateChange, null)
 
 	class ViewAction<St : Contract.State, Vi : Contract.View<St>>(viewAction: Vi.() -> Any?)

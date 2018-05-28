@@ -8,7 +8,7 @@ import io.reactivex.Scheduler
 import javax.inject.Inject
 
 private typealias ProgramUpdate = Contract.ProgramUpdate<State, View>
-private typealias StateUpdate = Contract.StateUpdate<State, View>
+private typealias StateChange = Contract.StateChange<State, View>
 private typealias ViewAction = Contract.ViewAction<State, View>
 
 @PerActivity

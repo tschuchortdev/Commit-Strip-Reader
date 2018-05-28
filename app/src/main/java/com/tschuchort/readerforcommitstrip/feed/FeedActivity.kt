@@ -157,27 +157,38 @@ class FeedActivity : AppCompatActivity(), FeedContract.View {
 
 	// signals
 
-	override val settingsClicked by lazy { RxMenuItem.clicks(settingsMenuItem).share().toUnit() }
+	override val settingsClicked by lazy {
+		RxMenuItem.clicks(settingsMenuItem).share().toUnit()
+				.andLogEvent("SettingsClicked")
+	}
 
 	override val changeFeedLayoutClicked by lazy {
 		RxMenuItem.clicks(feedOrientationMenuItem).toUnit().toUnit()
+				.andLogEvent("ChangeFeedLayoutClicked")
 	}
 
-	override val endReached by lazy { feedRecycler.onEndReachedEvents().toUnit() }
+	override val endReached by lazy {
+		feedRecycler.onEndReachedEvents().toUnit().andLogEvent("FeedEndReached")
+	}
 
 	override val refresh by lazy {
 		RxSwipeRefreshLayout.refreshes(swipeRefreshLayout).share().toUnit()
+				.andLogEvent("RefreshPulled")
 	}
 
-	override val comicClicked = comicClickRelay!!
+	override val comicClicked = comicClickRelay!!.andLogEvent("ComicClicked", true)
 
-	override val comicLongClicked = comicLongClickRelay!!
+	override val comicLongClicked = comicLongClickRelay!!.andLogEvent("ComicLongClicked", true)
 
-	override val dialogCanceled = dialogCanceledRelay!!
+	override val dialogCanceled = dialogCanceledRelay!!.andLogEvent("ShareSaveDialogCanceled")
 
-	override val saveClicked by lazy { RxView.clicks(saveButton).share().toUnit() }
+	override val saveClicked by lazy {
+		RxView.clicks(saveButton).share().toUnit().andLogEvent("SaveClicked")
+	}
 
-	override val shareClicked by lazy { RxView.clicks(shareButton).share().toUnit() }
+	override val shareClicked by lazy {
+		RxView.clicks(shareButton).share().toUnit().andLogEvent("ShareClicked")
+	}
 
 	// other
 

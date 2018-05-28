@@ -9,7 +9,7 @@ import io.reactivex.Single
 import javax.inject.Inject
 
 private typealias ProgramUpdate = Contract.ProgramUpdate<State, View>
-private typealias StateUpdate = Contract.StateUpdate<State, View>
+private typealias StateChange = Contract.StateChange<State, View>
 private typealias ViewAction = Contract.ViewAction<State, View>
 
 @PerActivity
@@ -45,19 +45,17 @@ class FeedPresenter
 
 	override fun update() = Observable.mergeArray<ProgramUpdate>(
 			handleInternetConnectivity(systemManager, State::internetConnected::set),
-			handleRefreshing(loadNewItems = ::loadNewComis,
+			handlePagingFeed(loadNextPage = ::loadNextPage,
+							 loadNewItems = ::loadNewComis,
 							 refreshSignal = bindSignal(View::refresh),
-							 getList = State::comics::get,
-							 setList = State::comics::set,
-							 setRefreshing = State::refreshing::set,
-							 showRefreshFailed = View::showRefreshFailed,
-							 scrollToTop = View::scrollToTop),
-			handlePagination(loadNextPage = ::loadNextPage,
-							 endReachedSignal = bindSignal(View::endReached),
+	                         endReachedSignal = bindSignal(View::endReached),
 							 getCurrentState = ::latestState,
 							 getList = State::comics::get,
 							 setList = State::comics::set,
 							 setLoading = State::loading::set,
+							 setRefreshing = State::refreshing::set,
+							 showRefreshFailed = View::showRefreshFailed,
+							 scrollToTop = View::scrollToTop,
 							 showPagingFailed = View::showNoMoreComics),
 			handleListOrientationChange(bindSignal(View::changeFeedLayoutClicked), ::latestState),
 			handleSaveComic(storage = storage,
@@ -98,9 +96,9 @@ class FeedPresenter
 	}
 }
 
-private inline fun handleListOrientationChange(changeOrientationSignal: Observable<*>,
-											   crossinline getState: () -> State)
-		= changeOrientationSignal.map(StateUpdate {
+private fun handleListOrientationChange(changeOrientationSignal: Observable<*>,
+										getState: () -> State)
+		= changeOrientationSignal.map(StateChange {
 		feedOrientation =
 				if (getState().feedOrientation == VERTICAL)
 					Orientation.HORIZONTAL
@@ -108,3 +106,21 @@ private inline fun handleListOrientationChange(changeOrientationSignal: Observab
 					Orientation.VERTICAL
 		Unit
 	})
+
+private fun handleShareSaveDialog(comicLongClickSignal: Observable<Comic>,
+								  dialogCancelSignal: Observable<*>,
+								  dialogOptionSelectedSignal: Observable<*>,
+								  setSelectedComic: State.(Comic?) -> Any?)
+		: Observable<StateChange> {
+
+	fun handleCloseDialog() = Observable.merge(dialogCancelSignal, dialogOptionSelectedSignal)
+			.map(StateChange {
+				setSelectedComic(null)
+			})
+
+	fun handleShowDialog() = comicLongClickSignal.map { clickedComic ->
+		StateChange { setSelectedComic(clickedComic) }
+	}
+
+	return Observable.merge(handleCloseDialog(), handleShowDialog())
+}
