@@ -13,12 +13,12 @@ interface FeedContract : Contract {
 
 	@SuppressLint("ParcelCreator")
 	data class State(
-			var comics: List<Comic>,
-			var internetConnected: Boolean,
-			var feedOrientation: Orientation,
-			var selectedComic: Comic?,
-			var loading: Boolean,
-			var refreshing: Boolean)
+			val comics: List<Comic>,
+			val internetConnected: Boolean,
+			val feedOrientation: Orientation,
+			val selectedComic: Comic?,
+			val loading: Boolean,
+			val refreshing: Boolean)
 		: Contract.State
 
 	abstract class Presenter(uiScheduler: Scheduler)

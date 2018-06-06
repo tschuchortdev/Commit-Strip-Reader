@@ -9,7 +9,7 @@ import timber.log.Timber
 
 
 fun <S : State, V : View<S>> handleInternetConnectivity(systemManager: SystemManager,
-                                                        setInternetConnected: S.(Boolean) -> Any?)
+                                                        setInternetConnected: S.(Boolean) -> S)
         = systemManager.observeInternetConnectivity()
         .distinctUntilChanged()
         .map { status ->
@@ -24,9 +24,9 @@ fun <S: State, V : View<S>, T> handlePagingFeed(loadNewItems: () -> Single<List<
                                                 endReachedSignal: Observable<*>,
                                                 getCurrentState: () -> S,
                                                 getList: S.() -> List<T>,
-                                                setList: S.(List<T>) -> Any?,
-                                                setLoading: S.(Boolean) -> Any?,
-                                                setRefreshing: S.(Boolean) -> Any?,
+                                                setList: S.(List<T>) -> S,
+                                                setLoading: S.(Boolean) -> S,
+                                                setRefreshing: S.(Boolean) -> S,
                                                 showRefreshFailed: V.() -> Any?,
                                                 showPagingFailed: V.() -> Any?,
                                                 scrollToTop: V.() -> Any?)
@@ -39,8 +39,8 @@ fun <S: State, V : View<S>, T> handlePagingFeed(loadNewItems: () -> Single<List<
 fun <S : State, V : View<S>, T> handleRefreshing(loadNewItems: () -> Single<List<T>>,
                                                  refreshSignal: Observable<*>,
                                                  getList: S.() -> List<T>,
-                                                 setList: S.(List<T>) -> Any?,
-                                                 setRefreshing: S.(Boolean) -> Any?,
+                                                 setList: S.(List<T>) -> S,
+                                                 setRefreshing: S.(Boolean) -> S,
                                                  showRefreshFailed: V.() -> Any?,
                                                  scrollToTop: V.() -> Any?)
         = refreshSignal.switchMap {
@@ -62,8 +62,8 @@ fun <S : State, V : View<S>, T> handlePagination(loadNextPage: () -> Single<List
                                                  endReachedSignal: Observable<*>,
                                                  getCurrentState: () -> S,
                                                  getList: S.() -> List<T>,
-                                                 setList: S.(List<T>) -> Any?,
-                                                 setLoading: S.(Boolean) -> Any?,
+                                                 setList: S.(List<T>) -> S,
+                                                 setLoading: S.(Boolean) -> S,
                                                  showPagingFailed: V.() -> Any?)
         : Observable<ProgramUpdate<S, V>> {
 

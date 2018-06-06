@@ -44,16 +44,16 @@ class FeedPresenter
 	)
 
 	override fun update() = Observable.mergeArray<ProgramUpdate>(
-			handleInternetConnectivity(systemManager, State::internetConnected::set),
+			handleInternetConnectivity(systemManager, { copy(internetConnected = it) }),
 			handlePagingFeed(loadNextPage = ::loadNextPage,
 							 loadNewItems = ::loadNewComis,
 							 refreshSignal = bindSignal(View::refresh),
 	                         endReachedSignal = bindSignal(View::endReached),
 							 getCurrentState = ::latestState,
 							 getList = State::comics::get,
-							 setList = State::comics::set,
-							 setLoading = State::loading::set,
-							 setRefreshing = State::refreshing::set,
+							 setList = { copy(comics = it) },
+							 setLoading = { copy(loading = it) },
+							 setRefreshing = { copy(refreshing = it) },
 							 showRefreshFailed = View::showRefreshFailed,
 							 scrollToTop = View::scrollToTop,
 							 showPagingFailed = View::showNoMoreComics),
@@ -74,7 +74,7 @@ class FeedPresenter
 								  dialogOptionSelectedSignal = Observable.merge(
 										  bindSignal(View::shareClicked),
 										  bindSignal(View::saveClicked)),
-								  setSelectedComic = State::selectedComic::set)
+								  setSelectedComic = { copy(selectedComic = it) })
 	)!!
 
 	fun loadNextPage(): Single<List<Comic>> {
@@ -99,18 +99,18 @@ class FeedPresenter
 private fun handleListOrientationChange(changeOrientationSignal: Observable<*>,
 										getState: () -> State)
 		= changeOrientationSignal.map(StateChange {
-		feedOrientation =
+		copy(feedOrientation =
 				if (getState().feedOrientation == VERTICAL)
 					Orientation.HORIZONTAL
 				else
 					Orientation.VERTICAL
-		Unit
+		)
 	})
 
 private fun handleShareSaveDialog(comicLongClickSignal: Observable<Comic>,
 								  dialogCancelSignal: Observable<*>,
 								  dialogOptionSelectedSignal: Observable<*>,
-								  setSelectedComic: State.(Comic?) -> Any?)
+								  setSelectedComic: State.(Comic?) -> State)
 		: Observable<StateChange> {
 
 	fun handleCloseDialog() = Observable.merge(dialogCancelSignal, dialogOptionSelectedSignal)

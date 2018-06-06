@@ -19,14 +19,14 @@ interface Contract {
 	interface State : AutoParcelable
 
 	open class ProgramUpdate<St : Contract.State, Vi : Contract.View<St>>(
-			val stateChange: (St.() -> Any?)? = null,
+			val stateChange: (St.() -> St)? = null,
 			val viewAction: (Vi.() -> Any?)? = null) {
 
 		operator fun component1() = stateChange
 		operator fun component2() = viewAction
 	}
 
-	class StateChange<St : Contract.State, Vi : Contract.View<St>>(stateChange: St.() -> Any?)
+	class StateChange<St : Contract.State, Vi : Contract.View<St>>(stateChange: St.() -> St)
 		: ProgramUpdate<St,Vi>(stateChange, null)
 
 	class ViewAction<St : Contract.State, Vi : Contract.View<St>>(viewAction: Vi.() -> Any?)
@@ -55,7 +55,10 @@ interface Contract {
 		/**
 		 * emits state changes, subcribed by view
 		 */
-		val stateUpdates: Flowable<St> by lazy { stateRelay.toFlowable(BackpressureStrategy.LATEST) }
+		val stateUpdates: Flowable<St> by lazy {
+			stateRelay.toFlowable(BackpressureStrategy.LATEST)
+					.distinctUntilChanged()
+		}
 
 		/**
 		 * initial state of the view
@@ -173,7 +176,7 @@ interface Contract {
 						.observeOn(uiScheduler) // VERY IMPORTANT! stateRelay.accept() needs to be called on UI thread always!
 						.subscribe { (stateUpdate, viewAction) ->
 							if(stateUpdate != null)
-								stateRelay.accept(latestState.apply { stateUpdate() })
+								stateRelay.accept(latestState.stateUpdate())
 
 							if(viewAction != null)
 								viewActionRelay.accept(viewAction)
