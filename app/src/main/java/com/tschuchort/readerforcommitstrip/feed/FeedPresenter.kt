@@ -83,7 +83,7 @@ class FeedPresenter
 								}
 								.onCompleteReturn<Event>(Event.SaveSuccessful)
 					}
-					.onErrorReturn { Event.SaveFailed(it) },
+					.onErrorReturn(Event::SaveFailed),
 
 
 			sideEffects.ofType<SideEffect.DownloadImageForSharing>()
@@ -168,7 +168,7 @@ class FeedPresenter
 
 		is Event.SaveSuccessful -> StateUpdate(oldState, ViewEffect.ShowSaveSuccesful)
 
-		is Event.SaveFailed -> StateUpdate(oldState, ViewEffect.ShowSaveSuccesful)
+		is Event.SaveFailed -> StateUpdate(oldState, ViewEffect.ShowSaveFailed)
 
 		is Event.ShareClicked -> {
 			val url = oldState.selectedComic!!.imageUrl

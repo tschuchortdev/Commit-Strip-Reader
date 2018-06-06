@@ -34,7 +34,7 @@ class ZoomPresenter
 								}
 								.onCompleteReturn<Event>(Event.SaveSuccessful)
 					}
-					.onErrorReturn { Event.SaveFailed(it) }
+					.onErrorReturn(Event::SaveFailed)
 	)!!
 
 	override fun logEvent(event: Event) {
