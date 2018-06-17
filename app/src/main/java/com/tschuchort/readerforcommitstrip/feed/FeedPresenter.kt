@@ -8,6 +8,7 @@ import com.tschuchort.readerforcommitstrip.feed.FeedContract.Orientation.VERTICA
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.rxkotlin.ofType
+import timber.log.Timber
 import javax.inject.Inject
 
 @PerActivity
@@ -161,9 +162,15 @@ class FeedPresenter
 		is Event.DialogCanceled -> StateUpdate(oldState.copy(selectedComic = null))
 
 		is Event.SaveClicked -> {
-			val comic = oldState.selectedComic!!
+			val comic = oldState.selectedComic
 
-			StateUpdate(oldState.copy(selectedComic = null), SideEffect.SaveComic(comic))
+			if(comic != null) {
+				StateUpdate(oldState.copy(selectedComic = null), SideEffect.SaveComic(comic))
+			}
+			else {
+				Timber.w("ignoring SaveClicked event because app is in illegal state")
+				StateUpdate(oldState)
+			}
 		}
 
 		is Event.SaveSuccessful -> StateUpdate(oldState, ViewEffect.ShowSaveSuccesful)
@@ -171,10 +178,18 @@ class FeedPresenter
 		is Event.SaveFailed -> StateUpdate(oldState, ViewEffect.ShowSaveFailed)
 
 		is Event.ShareClicked -> {
-			val url = oldState.selectedComic!!.imageUrl
-			val title = oldState.selectedComic.title
+			val comic = oldState.selectedComic
 
-			StateUpdate(oldState.copy(selectedComic = null), SideEffect.DownloadImageForSharing(url, title))
+			if(comic != null) {
+				val url = comic.imageUrl
+				val title = comic.title
+
+				StateUpdate(oldState.copy(selectedComic = null), SideEffect.DownloadImageForSharing(url, title))
+			}
+			else {
+				Timber.w("ignoring ShareClicked event because app is in illegal state")
+				StateUpdate(oldState)
+			}
 		}
 	}
 }
