@@ -1,16 +1,16 @@
 package com.tschuchort.readerforcommitstrip.feed
 
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import com.tschuchort.readerforcommitstrip.Comic
 import com.tschuchort.readerforcommitstrip.Contract
 import io.reactivex.Scheduler
+import kotlinx.android.parcel.Parcelize
 
 interface FeedContract : Contract {
 	enum class Orientation { VERTICAL, HORIZONTAL }
 
-	@SuppressLint("ParcelCreator")
+	@Parcelize
 	data class State(
 			val comics: List<Comic>,
 			val feedOrientation: Orientation,

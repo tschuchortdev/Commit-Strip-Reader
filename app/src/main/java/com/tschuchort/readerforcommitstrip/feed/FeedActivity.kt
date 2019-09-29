@@ -1,20 +1,20 @@
 package com.tschuchort.readerforcommitstrip.feed
 
 import android.os.Bundle
-import android.support.design.widget.BottomSheetDialog
-import android.support.v4.content.ContextCompat
-import android.support.v4.widget.SwipeRefreshLayout
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.DefaultItemAnimator
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.Toolbar
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.airbnb.epoxy.SimpleEpoxyController
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.jakewharton.rxbinding2.support.v4.widget.RxSwipeRefreshLayout
 import com.jakewharton.rxbinding2.view.RxMenuItem
 import com.jakewharton.rxbinding2.view.RxView
@@ -92,7 +92,7 @@ class FeedActivity : AppCompatActivity(), FeedContract.View {
 		super.onStop()
 	}
 
-	override fun onSaveInstanceState(outState: Bundle?) {
+	override fun onSaveInstanceState(outState: Bundle) {
 		super.onSaveInstanceState(outState)
 		feedController.onSaveInstanceState(outState)
 		presenter.onSaveInstanceState(outState)

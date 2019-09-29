@@ -1,7 +1,7 @@
 package com.tschuchort.readerforcommitstrip
 
 import android.app.Activity
-import android.support.test.espresso.intent.rule.IntentsTestRule
+import androidx.test.espresso.intent.rule.IntentsTestRule
 import org.junit.Before
 import org.junit.Rule
 import java.util.concurrent.Semaphore

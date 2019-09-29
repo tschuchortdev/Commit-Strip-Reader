@@ -1,10 +1,9 @@
 package com.tschuchort.readerforcommitstrip
 
-import android.graphics.drawable.Drawable
 import android.os.Parcelable
-import io.mironov.smuggler.AutoParcelable
-import java.util.*
+import kotlinx.android.parcel.Parcelize
 
+@Parcelize
 data class Comic(
 		val title: String,
 		val date: String,
@@ -12,4 +11,4 @@ data class Comic(
 		val link: String,
 		val imageUrl: String,
 		val categories: List<String> = emptyList()
-) : AutoParcelable
+) : Parcelable

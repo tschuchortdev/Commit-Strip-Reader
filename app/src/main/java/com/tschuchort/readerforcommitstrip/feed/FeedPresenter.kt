@@ -57,7 +57,10 @@ class FeedPresenter
 						)
 								.retryDelayed(delay = 1000, times = 5)
 								.map<Event>(Event::ComicsLoaded)
-								.onErrorReturn(Event::LoadingFailed)
+								.onErrorReturn {
+									Timber.e(it)
+									Event.LoadingFailed(it)
+								}
 					},
 
 			sideEffects.ofType<SideEffect.RefreshNewest>()
@@ -69,7 +72,10 @@ class FeedPresenter
 						)
 								.retryDelayed(delay = 1000, times = 5)
 								.map<Event>(Event::DataRefreshed)
-								.onErrorReturn(Event::RefreshFailed)
+								.onErrorReturn {
+									Timber.e(it)
+									Event.RefreshFailed(it)
+								}
 					},
 
 			systemManager.observeInternetConnectivity()
@@ -84,7 +90,10 @@ class FeedPresenter
 								}
 								.onCompleteReturn<Event>(Event.SaveSuccessful)
 					}
-					.onErrorReturn(Event::SaveFailed),
+					.onErrorReturn {
+						Timber.e(it)
+						Event.SaveFailed(it)
+					},
 
 
 			sideEffects.ofType<SideEffect.DownloadImageForSharing>()

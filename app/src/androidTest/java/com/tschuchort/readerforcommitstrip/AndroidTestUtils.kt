@@ -3,23 +3,27 @@ package com.tschuchort.readerforcommitstrip
 import android.app.Activity
 import android.content.ComponentName
 import android.content.pm.ActivityInfo
-import android.support.test.InstrumentationRegistry
-import android.support.test.InstrumentationRegistry.getTargetContext
-import android.support.test.espresso.Espresso.onView
-import android.support.test.espresso.contrib.RecyclerViewActions.scrollToPosition
-import android.support.test.espresso.intent.Intents.intended
-import android.support.test.espresso.intent.matcher.IntentMatchers.hasComponent
-import android.support.test.espresso.matcher.ViewMatchers.withId
-import android.support.v4.widget.SwipeRefreshLayout
-import android.support.v7.widget.RecyclerView
 import android.view.View
+import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.contrib.RecyclerViewActions.scrollToPosition
+import androidx.test.espresso.intent.Intents.intended
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.platform.app.InstrumentationRegistry
 import it.cosenonjaviste.daggermock.DaggerMockRule
 import org.hamcrest.Description
 import org.hamcrest.TypeSafeMatcher
 
 
 inline fun <reified A : Activity> checkActivityLaunched() {
-	intended(hasComponent(ComponentName(getTargetContext(), A::class.java)))
+	intended(hasComponent(
+			ComponentName(
+					InstrumentationRegistry.getInstrumentation().targetContext,
+					A::class.java
+			)
+	))
 }
 
 /**
@@ -61,5 +65,5 @@ fun recyclerScrollToEnd(recyclerId: Int, parent: Activity) {
 	val recycler = parent.findViewById<RecyclerView>(recyclerId)
 
 	onView(withId(recyclerId))
-			.perform(scrollToPosition<RecyclerView.ViewHolder>(recycler.adapter.itemCount - 1))
+			.perform(scrollToPosition<RecyclerView.ViewHolder>(recycler.adapter!!.itemCount - 1))
 }

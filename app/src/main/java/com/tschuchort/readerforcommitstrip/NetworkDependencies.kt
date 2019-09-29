@@ -34,7 +34,7 @@ class NetworkModule {
 			.client(httpClient)
 			.addCallAdapterFactory(RxJava2CallAdapterFactory.create())
 			.addConverterFactory(xmlConverter)
-			.baseUrl("http://www.commitstrip.com/")
+			.baseUrl("https://www.commitstrip.com/")
 			.build()
 			.create(CommitStripWebService::class.java)
 

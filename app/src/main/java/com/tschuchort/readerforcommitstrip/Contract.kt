@@ -1,12 +1,12 @@
 package com.tschuchort.readerforcommitstrip
 
 import android.os.Bundle
-import android.support.annotation.CallSuper
-import android.support.annotation.MainThread
+import android.os.Parcelable
+import androidx.annotation.CallSuper
+import androidx.annotation.MainThread
 import arrow.core.Either
 import com.jakewharton.rxrelay2.BehaviorRelay
 import com.jakewharton.rxrelay2.PublishRelay
-import io.mironov.smuggler.AutoParcelable
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.disposables.Disposable
@@ -15,7 +15,7 @@ import timber.log.Timber
 import java.io.Serializable
 
 interface Contract {
-	interface State : AutoParcelable
+	interface State : Parcelable
 
 	interface Event : Serializable
 

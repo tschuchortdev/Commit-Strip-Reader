@@ -8,14 +8,15 @@ import timber.log.Timber
 
 
 class CrashlyticsTimberTree : Timber.Tree() {
-	override fun log(priority: Int, tag: String?, message: String?, t: Throwable?) {
+
+	override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
 		when(priority) {
 			Log.VERBOSE, Log.DEBUG -> return
 			Log.INFO -> {
 				if(message != null)
 					Answers.getInstance().logCustom(
 							CustomEvent("Info").putCustomAttribute(
-									"message", message.toString()
+									"message", message
 					))
 			}
 			else -> {

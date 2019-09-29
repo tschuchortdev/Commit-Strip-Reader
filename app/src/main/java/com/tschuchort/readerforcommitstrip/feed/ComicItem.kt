@@ -2,10 +2,10 @@ package com.tschuchort.readerforcommitstrip.feed
 
 import android.content.Context
 import android.content.res.Configuration
-import android.support.v7.widget.CardView
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import com.airbnb.epoxy.EpoxyAttribute
 import com.airbnb.epoxy.EpoxyModelWithHolder
 import com.bumptech.glide.Glide

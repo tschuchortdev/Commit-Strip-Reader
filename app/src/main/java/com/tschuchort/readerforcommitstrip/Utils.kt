@@ -12,15 +12,15 @@ import android.graphics.Bitmap
 import android.graphics.Point
 import android.net.Uri
 import android.os.Build
-import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.StaggeredGridLayoutManager
 import android.util.DisplayMetrics
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.bumptech.glide.GenericRequestBuilder
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
@@ -29,8 +29,6 @@ import io.apptik.multiview.layoutmanagers.ViewPagerLayoutManager
 import java.io.File
 import java.io.FileOutputStream
 import java.io.Serializable
-import java.lang.Exception
-import java.lang.UnsupportedOperationException
 import java.util.*
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -156,20 +154,20 @@ var View.marginBottom: Int
 	}
 
 fun RecyclerView.LayoutManager.findFirstVisibleItemPosition() = when(this) {
-	is LinearLayoutManager                    -> findFirstVisibleItemPosition()
-	is ViewPagerLayoutManager     -> findFirstVisibleItemPosition()
+	is LinearLayoutManager        -> findFirstVisibleItemPosition()
+	is ViewPagerLayoutManager                                  -> findFirstVisibleItemPosition()
 	is GridLayoutManager          -> findFirstVisibleItemPosition()
 	is StaggeredGridLayoutManager -> findFirstVisibleItemPositions(null).first()
-	else                          -> throw IllegalArgumentException(
+	else                                                       -> throw IllegalArgumentException(
 			"can't get first visible item position for unknown recycler view layout manager")
 }
 
 fun RecyclerView.LayoutManager.findLastVisibleItemPosition() = when(this) {
-	is LinearLayoutManager                    -> findLastVisibleItemPosition()
-	is ViewPagerLayoutManager     -> findLastVisibleItemPosition()
+	is LinearLayoutManager        -> findLastVisibleItemPosition()
+	is ViewPagerLayoutManager                                  -> findLastVisibleItemPosition()
 	is GridLayoutManager          -> findLastVisibleItemPosition()
 	is StaggeredGridLayoutManager -> findLastVisibleItemPositions(null).first()
-	else                          -> throw IllegalArgumentException(
+	else                                                       -> throw IllegalArgumentException(
 			"can't get last visible item position for unknown recycler view layout manager")
 }
 
@@ -182,7 +180,7 @@ inline fun <reified LM : RecyclerView.LayoutManager> RecyclerView.swapLayoutMana
 		return
 
 	val firstVisibleItemPos =
-			try { oldLayoutManager.findFirstVisibleItemPosition() }
+			try { oldLayoutManager!!.findFirstVisibleItemPosition() }
 			catch (e: IllegalArgumentException) { RecyclerView.NO_POSITION }
 
 	this.layoutManager = layoutManager
@@ -257,7 +255,7 @@ fun getNativeShareIntent(context: Context, sendIntent: Intent): Intent {
 					component = ComponentName(packageName, it.activityInfo.name)
 					`package` = packageName
 					action = ACTION_SEND
-					putExtras(sendIntent.extras)
+					putExtras(sendIntent.extras!!)
 					type = sendIntent.type
 				}
 

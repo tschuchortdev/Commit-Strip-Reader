@@ -1,13 +1,13 @@
 package com.tschuchort.readerforcommitstrip.zoom
 
-import android.annotation.SuppressLint
 import com.tschuchort.readerforcommitstrip.Comic
 import com.tschuchort.readerforcommitstrip.Contract
 import io.reactivex.Scheduler
+import kotlinx.android.parcel.Parcelize
 
 interface ZoomContract : Contract {
 
-	@SuppressLint("ParcelCreator")
+	@Parcelize
 	data class State(val comic: Comic) : Contract.State
 
 	sealed class Event : Contract.Event {

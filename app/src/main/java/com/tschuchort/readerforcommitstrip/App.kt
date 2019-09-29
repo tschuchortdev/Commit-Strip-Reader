@@ -9,8 +9,8 @@ import android.app.PendingIntent.FLAG_ONE_SHOT
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Build
-import android.support.multidex.MultiDexApplication
-import android.support.v4.app.NotificationCompat
+import androidx.core.app.NotificationCompat
+import androidx.multidex.MultiDexApplication
 import com.akaita.java.rxjava2debug.RxJava2Debug
 import com.crashlytics.android.Crashlytics
 import com.facebook.stetho.Stetho

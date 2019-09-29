@@ -2,11 +2,10 @@ package com.tschuchort.readerforcommitstrip
 
 import android.app.Activity
 import android.content.Intent
-import android.support.v4.app.NavUtils
-import android.support.v4.app.TaskStackBuilder
+import androidx.core.app.NavUtils
+import androidx.core.app.TaskStackBuilder
 import com.tschuchort.readerforcommitstrip.settings.SettingsActivity
 import com.tschuchort.readerforcommitstrip.zoom.ZoomActivity
-import java.lang.IllegalArgumentException
 import javax.inject.Inject
 
 @PerActivity

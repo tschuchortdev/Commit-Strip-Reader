@@ -1,8 +1,8 @@
 package com.tschuchort.readerforcommitstrip
 
 import android.content.Context
-import android.support.annotation.CallSuper
 import android.view.View
+import androidx.annotation.CallSuper
 import com.airbnb.epoxy.EpoxyHolder
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty

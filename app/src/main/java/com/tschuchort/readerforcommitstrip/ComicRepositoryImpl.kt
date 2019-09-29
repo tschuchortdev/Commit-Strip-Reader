@@ -124,7 +124,7 @@ class ComicRepositoryImpl
 
 	class CancellationFailure(msg: String): Throwable(msg)
 
-	override fun getNewestComic() = getNewestComics().map(List<Comic>::first)!!
+	override fun getNewestComic() = getNewestComics().map(List<Comic>::first)
 
 	override fun getNewestComics(): Single<List<Comic>> = getComicsForPage(getPageForIndex(0))
 

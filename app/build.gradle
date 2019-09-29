@@ -6,15 +6,9 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-allopen'
 apply plugin: 'io.fabric'
 
-// smuggler plugin must be applied last
-apply plugin: "io.mironov.smuggler"
 
-
-def COMPILE_SDK_VERSION = 27
-def BUILD_TOOLS_VERSION = "27.0.3"
-def SUPPORT_V4_VERSION = "27.1.1"
-def SUPPORT_V7_VERSION = "27.1.1"
-def ESPRESSO_VERSION = "3.0.1"
+def COMPILE_SDK_VERSION = 29
+def BUILD_TOOLS_VERSION = "29.0.2"
 
 kapt {
     correctErrorTypes = true
@@ -26,7 +20,6 @@ allOpen {
 
 kotlin {
     experimental {
-        coroutines "enable"
     }
 }
 
@@ -46,7 +39,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -92,14 +85,14 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'com.android.support:multidex:1.0.3'
-    androidTestImplementation 'com.android.support:multidex-instrumentation:1.0.3'
+    implementation 'androidx.multidex:multidex:2.0.1'
+    androidTestImplementation 'androidx.multidex:multidex-instrumentation:2.0.0'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21.2'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-rx2:0.21.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-rx2:1.3.2'
     implementation 'org.jetbrains.kotlinx:kotlinx-support-jdk8:0.3'
 
     implementation 'io.arrow-kt:arrow-core:0.6.0'
@@ -114,26 +107,26 @@ dependencies {
     implementation 'io.arrow-kt:arrow-effects-kotlinx-coroutines:0.6.0' //optional
     implementation 'io.arrow-kt:arrow-optics:0.6.0' //optional
 
-    implementation "com.android.support:appcompat-v7:$SUPPORT_V7_VERSION"
-    implementation "com.android.support:support-annotations:$SUPPORT_V7_VERSION"
-    implementation "com.android.support:gridlayout-v7:$SUPPORT_V7_VERSION"
-    implementation "com.android.support:support-v4:$SUPPORT_V4_VERSION"
-    implementation "com.android.support:design:$SUPPORT_V7_VERSION"
-    implementation "com.android.support:cardview-v7:$SUPPORT_V7_VERSION"
-    implementation "com.android.support.constraint:constraint-layout:1.1.0"
-    androidTestImplementation "com.android.support:support-annotations:$SUPPORT_V7_VERSION"
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test:rules:1.0.2'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.annotation:annotation:1.1.0'
+    implementation 'androidx.gridlayout:gridlayout:1.0.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'com.google.android.material:material:1.0.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    androidTestImplementation 'androidx.annotation:annotation:1.1.0'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test:rules:1.2.0'
 
-    implementation "android.arch.lifecycle:extensions:1.1.1"
-    annotationProcessor "android.arch.lifecycle:compiler:1.1.1"
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0'
+    implementation 'androidx.lifecycle:lifecycle-common-java8:2.1.0'
 
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5'
     releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
     testImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
 
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
-    implementation 'com.akaita.java:rxjava2-debug:1.2.1'
+    implementation 'com.akaita.java:rxjava2-debug:1.4.0'
     implementation 'com.jakewharton.rxbinding2:rxbinding-kotlin:2.0.0'
     implementation 'com.jakewharton.rxbinding2:rxbinding-support-v4-kotlin:2.0.0'
     implementation 'com.jakewharton.rxbinding2:rxbinding-appcompat-v7-kotlin:2.0.0'
@@ -142,7 +135,7 @@ dependencies {
     implementation 'com.jakewharton.rxrelay2:rxrelay:2.0.0'
     // Because RxAndroid releases are few and far between, it is recommended you also
     // explicitly depend on RxJava's latest version for bug fixes and new features.
-    implementation "io.reactivex.rxjava2:rxjava:2.1.4"
+    implementation "io.reactivex.rxjava2:rxjava:2.2.8"
     implementation 'io.reactivex:rxjava-joins:0.22.0'
     implementation 'io.reactivex.rxjava2:rxkotlin:2.1.0'
 
@@ -162,15 +155,15 @@ dependencies {
     implementation 'com.airbnb.android:epoxy:2.2.0'
     kapt 'com.airbnb.android:epoxy-processor:2.2.0'
 
-    //implementation 'com.jakewharton:butterknife:8.5.1'
+    //implementation 'com.jakewharton:butterknife:10.0.0'
     implementation 'com.jakewharton:kotterknife:0.1.0-SNAPSHOT'
-    kapt 'com.jakewharton:butterknife-compiler:8.5.1'
+    kapt 'com.jakewharton:butterknife-compiler:10.0.0'
 
-    implementation 'com.squareup.okhttp3:okhttp:3.8.1'
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
     testImplementation 'com.squareup.okhttp3:mockwebserver:3.8.1'
 
-    implementation 'com.facebook.stetho:stetho:1.5.0'
-    implementation 'com.facebook.stetho:stetho-okhttp3:1.5.0'
+    implementation 'com.facebook.stetho:stetho:1.5.1'
+    implementation 'com.facebook.stetho:stetho-okhttp3:1.5.1'
 
     implementation 'com.squareup.retrofit2:retrofit:2.3.0'
     implementation('com.squareup.retrofit2:converter-simplexml:2.3.0') {
@@ -199,29 +192,29 @@ dependencies {
 
     implementation 'com.github.pwittchen:reactivenetwork-rx2:0.12.1'
 
-    implementation 'com.jakewharton.timber:timber:4.5.1'
+    implementation 'com.jakewharton.timber:timber:4.7.1'
 
     implementation 'com.github.tschuchortdev:retainedproperties:1.0.0'
 
     testImplementation 'junit:junit:4.12'
 
-    testImplementation "org.robolectric:robolectric:3.4.2"
+    testImplementation "org.robolectric:robolectric:4.2.1"
 
     testImplementation "com.google.truth:truth:0.36"
 
-    testImplementation 'org.mockito:mockito-core:2.10.0'
+    testImplementation 'org.mockito:mockito-core:2.23.4'
     androidTestImplementation "com.nhaarman:mockito-kotlin-kt1.1:1.5.0"
     androidTestImplementation 'org.mockito:mockito-android:2.10.0'
 
     androidTestImplementation 'org.hamcrest:hamcrest-library:1.3'
 
-    androidTestImplementation("com.android.support.test.espresso:espresso-core:$ESPRESSO_VERSION", {
+    androidTestImplementation('androidx.test.espresso:espresso-core:3.1.0', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    androidTestImplementation "com.android.support.test.espresso:espresso-contrib:$ESPRESSO_VERSION"
-    androidTestImplementation "com.android.support.test.espresso:espresso-intents:$ESPRESSO_VERSION"
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.2.0'
 
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
 
     testImplementation 'com.github.fabioCollini.daggermock:daggermock:0.8.2'
     androidTestImplementation 'com.github.fabioCollini.daggermock:daggermock:0.8.2'
@@ -230,8 +223,8 @@ dependencies {
     testImplementation 'com.github.fabioCollini.daggermock:daggermock-kotlin:0.8.2'
     androidTestImplementation 'com.github.fabioCollini.daggermock:daggermock-kotlin:0.8.2'
 
-    implementation 'com.google.firebase:firebase-core:15.0.2'
-    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.2'
+    implementation 'com.google.firebase:firebase-core:17.2.0'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
 }
 
 // this needs to be applied after dependencies for some reason
